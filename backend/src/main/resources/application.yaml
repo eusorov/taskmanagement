@@ -45,3 +45,8 @@ springdoc:
     path: /swagger-ui.html
   paths-to-match: /api/**
   default-produces-media-type: application/json
+
+app:
+  demo-tasks:
+    # Adds sample tasks on startup when the database is empty; switch off with APP_DEMO_TASKS_ENABLED=false
+    enabled: true

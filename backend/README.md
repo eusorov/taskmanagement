@@ -27,6 +27,7 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - use dockerfile and docker compose for simple deployment (no kubernetes)
 - use Lombok for simplicity 
 - add webMvcTests and integration tests for controller
+- add 20 demo tasks on startup if db is empty
 
 ## out of scope
 - auth
