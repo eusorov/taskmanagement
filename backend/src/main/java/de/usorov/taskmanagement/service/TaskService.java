@@ -10,10 +10,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class TaskService {
 
 	/** Soft limit: concurrent creates can exceed it slightly. */
@@ -21,11 +23,6 @@ public class TaskService {
 
 	private final TaskRepository taskRepository;
 	private final Clock clock;
-
-	public TaskService(TaskRepository taskRepository, Clock clock) {
-		this.taskRepository = taskRepository;
-		this.clock = clock;
-	}
 
 	@Transactional(readOnly = true)
 	public TaskPage find(TaskSearch search) {

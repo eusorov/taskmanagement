@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,15 +32,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/tasks")
+@RequiredArgsConstructor
 public class TaskController {
 
 	private static final String PROBLEM_JSON = MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 
 	private final TaskService taskService;
-
-	public TaskController(TaskService taskService) {
-		this.taskService = taskService;
-	}
 
 	@GetMapping
 	@ApiResponse(responseCode = "200", description = "A page of tasks", useReturnTypeSchema = true)

@@ -5,15 +5,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import lombok.AllArgsConstructor;
 
 /** A clock tests can set and advance. */
+@AllArgsConstructor
 public class TestClock extends Clock {
 
 	private Instant now;
-
-	public TestClock(Instant now) {
-		this.now = now;
-	}
 
 	public void set(Instant now) {
 		this.now = now;

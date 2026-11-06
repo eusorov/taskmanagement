@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -23,13 +24,10 @@ import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class TaskRepository {
 
 	private final DSLContext dsl;
-
-	public TaskRepository(DSLContext dsl) {
-		this.dsl = dsl;
-	}
 
 	public Optional<Task> findById(UUID id) {
 		return dsl.selectFrom(TASKS).where(TASKS.ID.eq(id)).fetchOptional().map(TaskRepository::toTask);
