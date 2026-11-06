@@ -15,7 +15,7 @@ logging:
   level:
     de.usorov.taskmanagement: INFO
   structured:
-    # JSON (ECS) is switched on in deploy/compose.yaml; local runs keep plain text
+    # JSON (ECS) is switched on in compose.yaml; local runs keep plain text
     ecs:
       service:
         # Container hostname, so lines from different replicas can be told apart

@@ -1,4 +1,4 @@
-# Usage (from this directory): cp .env.example .env, set the password, then
+# Usage (from the repository root): cp .env.example .env, set the password, then
 #   docker compose up -d --build and open http://localhost (or the port set as FRONTEND_PORT in .env)
 name: taskmanagement
 
@@ -25,7 +25,7 @@ services:
         max-file: "5"
 
   backend:
-    build: ../backend
+    build: ./backend
     image: taskmanagement-backend:local
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskmanagement
@@ -50,7 +50,7 @@ services:
     logging: *logging
 
   frontend:
-    build: ../frontend
+    build: ./frontend
     image: taskmanagement-frontend:local
     # nginx serves the app and forwards /api to the backend
     ports:
