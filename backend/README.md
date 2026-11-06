@@ -32,7 +32,7 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - auth
 - caching
 - kubernetes deployment
-- metrics and traces
+- traces
 - api versioning
 - native image
-- db performance (db indices)
+- db performance
