@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { errorMessage, type Priority } from '../api/client'
+import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useCreateTask } from './queries'
 
@@ -7,6 +8,7 @@ export function CreateTaskForm() {
   const [name, setName] = useState('')
   const [priority, setPriority] = useState<Priority>('NORMAL')
   const createTask = useCreateTask()
+  const showToast = useToast()
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -16,6 +18,7 @@ export function CreateTaskForm() {
         onSuccess: () => {
           setName('')
           setPriority('NORMAL')
+          showToast('Task added')
         },
       },
     )

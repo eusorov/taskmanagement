@@ -55,6 +55,7 @@ describe('adding a task', () => {
     await user.click(screen.getByRole('button', { name: 'Add task' }))
 
     expect(await screen.findByText('Book dentist')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Task added')
     expect(api.lastRequest('POST')?.body).toEqual({ name: 'Book dentist', priority: 'URGENT' })
     expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('')
     expect(screen.getByRole('radio', { name: 'Normal' })).toBeChecked()
@@ -78,6 +79,7 @@ describe('adding a task', () => {
     await user.click(screen.getByRole('button', { name: 'Add task' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Task limit of 10000 reached')
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('One more')
   })
 })
@@ -90,6 +92,7 @@ describe('changing a task', () => {
     await user.click(await screen.findByRole('checkbox', { name: 'Done: Pay rent' }))
 
     await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeChecked())
+    expect(screen.getByRole('status')).toHaveTextContent('Marked “Pay rent” as done')
     expect(api.lastRequest('PATCH')).toMatchObject({
       path: `/api/tasks/${task.id}`,
       body: { done: true, version: 0 },
@@ -110,6 +113,7 @@ describe('changing a task', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(await screen.findByText('Pay rent and bills')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Changes saved')
     expect(api.lastRequest('PATCH')?.body).toEqual({ name: 'Pay rent and bills', priority: 'URGENT', version: 0 })
   })
 
@@ -134,6 +138,7 @@ describe('changing a task', () => {
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Someone else changed this task while you were editing')
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
     await user.click(within(alert).getByRole('button', { name: 'Reload task' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -154,6 +159,15 @@ describe('changing a task', () => {
     expect(await screen.findByText('Pay rent today')).toBeInTheDocument()
   })
 
+  it('confirms reopening a done task', async () => {
+    api.add('Pay rent', 'NORMAL', true)
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    expect(await screen.findByText('Reopened “Pay rent”')).toBeInTheDocument()
+  })
+
   it('deletes a task', async () => {
     api.add('Pay rent')
     api.add('Water plants')
@@ -162,6 +176,7 @@ describe('changing a task', () => {
     await user.click(await screen.findByRole('button', { name: 'Delete Pay rent' }))
 
     await waitFor(() => expect(screen.queryByText('Pay rent')).not.toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent('Deleted “Pay rent”')
     expect(taskNames()).toEqual(['Water plants'])
   })
 })

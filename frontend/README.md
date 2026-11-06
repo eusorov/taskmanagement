@@ -53,13 +53,16 @@ Tests run in Vitest with Testing Library and use the fake API instead of a real 
 - use problem detail
 - use nginx for serving react
 - use dockerfile and same docker compose as backend
+- add success toast messages for actions
 
 ## out of scope
 - auth (login)
 - no JWT
-- undo or confirmation for delete
+- no undo and no confirmation dialog for delete
+- no drag-and-drop reordering
 - spinners
 - live updates from other users (no websockets)
 - offline use (no local storage)
 - internationalization
 - https (Encrypt certificates)
+- outage error handling

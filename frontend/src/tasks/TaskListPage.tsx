@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ApiError, errorMessage, type Task } from '../api/client'
+import { useToast } from '../feedback/toastContext'
 import { CreateTaskForm } from './CreateTaskForm'
 import { EditTaskDialog } from './EditTaskDialog'
 import { FilterBar } from './FilterBar'
@@ -21,6 +22,7 @@ export function TaskListPage() {
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
   const reloadTasks = useReloadTasks()
+  const showToast = useToast()
   const [editing, setEditing] = useState<Task | null>(null)
 
   const rowError = updateTask.error ?? deleteTask.error
@@ -104,12 +106,15 @@ export function TaskListPage() {
               task={task}
               onToggleDone={(t) => {
                 dismissRowError()
-                updateTask.mutate({ task: t, changes: { done: !t.done } })
+                updateTask.mutate(
+                  { task: t, changes: { done: !t.done } },
+                  { onSuccess: () => showToast(t.done ? `Reopened “${t.name}”` : `Marked “${t.name}” as done`) },
+                )
               }}
               onEdit={setEditing}
               onDelete={(t) => {
                 dismissRowError()
-                deleteTask.mutate(t)
+                deleteTask.mutate(t, { onSuccess: () => showToast(`Deleted “${t.name}”`) })
               }}
             />
           ))}

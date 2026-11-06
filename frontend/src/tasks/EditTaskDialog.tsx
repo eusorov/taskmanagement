@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, errorMessage, type Priority, type Task } from '../api/client'
+import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useReloadTasks, useUpdateTask } from './queries'
 
@@ -13,6 +14,7 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
   const [priority, setPriority] = useState<Priority>(task.priority)
   const updateTask = useUpdateTask()
   const reloadTasks = useReloadTasks()
+  const showToast = useToast()
   const conflict = updateTask.error instanceof ApiError && updateTask.error.status === 409
 
   useEffect(() => {
@@ -23,7 +25,15 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    updateTask.mutate({ task, changes: { name: name.trim(), priority } }, { onSuccess: onClose })
+    updateTask.mutate(
+      { task, changes: { name: name.trim(), priority } },
+      {
+        onSuccess: () => {
+          showToast('Changes saved')
+          onClose()
+        },
+      },
+    )
   }
 
   function reload() {
