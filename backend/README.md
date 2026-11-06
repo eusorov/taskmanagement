@@ -20,6 +20,7 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - no auth was required, to keep simple no auth was implemented
 - without auth there is no user connections to tasks, everyone can read tasks
 - JOOQ was chosen over JPA because, so there is more control over SQL
+- add connection pool
 - For REST errors use ProblemDetails
-- adds OpenAPI doc and document controller to create later client for the frontend 
-- adds spring actuator endpoints for health checks
+- add OpenAPI doc and document controller to create later client for the frontend 
+- add spring actuator endpoints for health checks
