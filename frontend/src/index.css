@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Atkinson Hyperlegible Next', ui-sans-serif, system-ui, sans-serif;
+
+  /* A task list marked up with coloured pencils */
+  --color-paper: #f1f4f2;
+  --color-ink: #1e2a30;
+  --color-muted: #5d6a6f;
+  --color-rule: #d3dad5;
+  --color-blue-pencil: #2b4fb0;
+  --color-red-pencil: #b42318;
+  --color-graphite: #8c9a92;
+}
+
+body {
+  @apply bg-paper font-sans text-ink antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-blue-pencil);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
