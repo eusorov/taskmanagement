@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PRIORITIES, type Priority } from '../api/client'
-import type { Status, TaskFilters } from './filters'
+import { SORT_OPTIONS, type SortOption, type Status, type TaskFilters } from './filters'
 import { PriorityStroke } from './priority'
 import { PRIORITY_LABEL } from './priorityLabel'
 
@@ -77,6 +77,20 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
           </button>
         ))}
       </div>
+      <label className="flex items-center gap-2 text-sm text-muted sm:ml-auto">
+        Sort by
+        <select
+          value={filters.sort}
+          onChange={(event) => onChange({ ...filters, sort: event.target.value as SortOption, page: 0 })}
+          className="rounded-md border border-rule bg-white px-2 py-1 text-ink"
+        >
+          {Object.entries(SORT_OPTIONS).map(([value, { label }]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   )
 }

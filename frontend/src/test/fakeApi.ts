@@ -77,6 +77,7 @@ export class FakeApi {
       .filter((t) => done === null || String(t.done) === done)
       .filter((t) => priorities.length === 0 || priorities.includes(t.priority))
       .filter((t) => !q || t.name.toLowerCase().includes(q))
+      .sort(compareLikeBackend(query))
     return json(200, { items: matching.slice(page * size, (page + 1) * size), page, size, total: matching.length })
   }
 
@@ -98,6 +99,23 @@ export class FakeApi {
     this.tasks.splice(index, 1)
     return new Response(null, { status: 204 })
   }
+}
+
+const PRIORITY_RANK: Record<Priority, number> = { LOW: 0, NORMAL: 1, URGENT: 2 }
+
+/** Open before done; then the requested field, or priority desc and newest first. */
+function compareLikeBackend(query: URLSearchParams) {
+  const sort = query.get('sort') as 'priority' | 'createdAt' | 'updatedAt' | 'name' | null
+  const ascending = (query.get('order') ?? (sort === 'name' ? 'asc' : 'desc')) === 'asc'
+  const value = (task: Task, field: NonNullable<typeof sort>) =>
+    field === 'priority' ? PRIORITY_RANK[task.priority] : task[field]
+  const by = (field: NonNullable<typeof sort>, asc: boolean) => (a: Task, b: Task) => {
+    const [x, y] = [value(a, field), value(b, field)]
+    return (x < y ? -1 : x > y ? 1 : 0) * (asc ? 1 : -1)
+  }
+  const fields = sort ? [by(sort, ascending)] : [by('priority', false), by('createdAt', false)]
+  return (a: Task, b: Task) =>
+    Number(a.done) - Number(b.done) || fields.reduce((result, compare) => result || compare(a, b), 0)
 }
 
 function json(status: number, body: unknown) {

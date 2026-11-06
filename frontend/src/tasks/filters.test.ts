@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_FILTERS, PAGE_SIZE, parseFilters, serializeFilters, toListQuery } from './filters'
+import { DEFAULT_FILTERS, isFiltered, PAGE_SIZE, parseFilters, serializeFilters, toListQuery } from './filters'
 
 describe('parseFilters', () => {
   it('uses defaults for an empty URL', () => {
@@ -7,10 +7,11 @@ describe('parseFilters', () => {
   })
 
   it('reads every filter', () => {
-    expect(parseFilters(new URLSearchParams('status=done&priority=URGENT,LOW&q=milk&page=2'))).toEqual({
+    expect(parseFilters(new URLSearchParams('status=done&priority=URGENT,LOW&q=milk&sort=name-desc&page=2'))).toEqual({
       status: 'done',
       priorities: ['URGENT', 'LOW'],
       query: 'milk',
+      sort: 'name-desc',
       page: 2,
     })
   })
@@ -22,6 +23,8 @@ describe('parseFilters', () => {
     })
     expect(parseFilters(new URLSearchParams('page=1.5')).page).toBe(0)
     expect(parseFilters(new URLSearchParams('page=abc')).page).toBe(0)
+    expect(parseFilters(new URLSearchParams('sort=owner')).sort).toBe('priority')
+    expect(parseFilters(new URLSearchParams('sort=toString')).sort).toBe('priority')
   })
 })
 
@@ -31,7 +34,7 @@ describe('serializeFilters', () => {
   })
 
   it('round-trips through parseFilters', () => {
-    const filters = { status: 'open', priorities: ['NORMAL', 'URGENT'], query: 'call mom', page: 3 } as const
+    const filters = { status: 'open', priorities: ['NORMAL', 'URGENT'], query: 'call mom', sort: 'updated', page: 3 } as const
     const copy = { ...filters, priorities: [...filters.priorities] }
     expect(parseFilters(serializeFilters(copy))).toEqual(copy)
   })
@@ -43,13 +46,36 @@ describe('toListQuery', () => {
       done: undefined,
       priority: undefined,
       q: undefined,
+      sort: undefined,
+      order: undefined,
       page: 0,
       size: PAGE_SIZE,
     })
   })
 
+  it('maps each sort option to the API sort and order', () => {
+    const query = (sort: (typeof DEFAULT_FILTERS)['sort']) => {
+      const { sort: field, order } = toListQuery({ ...DEFAULT_FILTERS, sort })
+      return [field, order]
+    }
+    expect(query('newest')).toEqual(['createdAt', 'desc'])
+    expect(query('oldest')).toEqual(['createdAt', 'asc'])
+    expect(query('updated')).toEqual(['updatedAt', 'desc'])
+    expect(query('name')).toEqual(['name', 'asc'])
+    expect(query('name-desc')).toEqual(['name', 'desc'])
+  })
+
   it('maps status to done', () => {
     expect(toListQuery({ ...DEFAULT_FILTERS, status: 'open' }).done).toBe(false)
     expect(toListQuery({ ...DEFAULT_FILTERS, status: 'done' }).done).toBe(true)
+  })
+})
+
+describe('isFiltered', () => {
+  it('counts status, priority and search but not sorting or paging', () => {
+    expect(isFiltered({ ...DEFAULT_FILTERS, sort: 'name', page: 2 })).toBe(false)
+    expect(isFiltered({ ...DEFAULT_FILTERS, status: 'done' })).toBe(true)
+    expect(isFiltered({ ...DEFAULT_FILTERS, priorities: ['LOW'] })).toBe(true)
+    expect(isFiltered({ ...DEFAULT_FILTERS, query: 'milk' })).toBe(true)
   })
 })

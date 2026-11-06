@@ -30,7 +30,11 @@ class OpenApiTest {
 				.andExpect(jsonPath("$.paths['/api/tasks'].post").exists())
 				.andExpect(jsonPath("$.paths['/api/tasks/{id}'].patch").exists())
 				.andExpect(jsonPath("$.paths['/api/tasks/{id}'].delete").exists())
-				.andExpect(jsonPath("$.components.schemas.TaskResponse").exists());
+				.andExpect(jsonPath("$.components.schemas.TaskResponse").exists())
+				.andExpect(jsonPath("$.paths['/api/tasks'].get.parameters[?(@.name == 'sort')].schema.enum[*]")
+						.value(contains("priority", "createdAt", "updatedAt", "name")))
+				.andExpect(jsonPath("$.paths['/api/tasks'].get.parameters[?(@.name == 'order')].schema.enum[*]")
+						.value(contains("asc", "desc")));
 	}
 
 	@Test

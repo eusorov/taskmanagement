@@ -3,6 +3,7 @@ package de.usorov.taskmanagement.controller.dto;
 import de.usorov.taskmanagement.model.Priority;
 import de.usorov.taskmanagement.model.TaskSearch;
 import de.usorov.taskmanagement.model.TaskSortField;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -19,8 +20,10 @@ public record TaskListQuery(
 		Boolean done,
 		List<Priority> priority,
 		@Size(max = 500) String q,
-		@Pattern(regexp = "priority|createdAt|updatedAt|name") String sort,
-		@Pattern(regexp = "asc|desc") String order,
+		@Schema(allowableValues = {"priority", "createdAt", "updatedAt", "name"})
+				@Pattern(regexp = "priority|createdAt|updatedAt|name")
+				String sort,
+		@Schema(allowableValues = {"asc", "desc"}) @Pattern(regexp = "asc|desc") String order,
 		Boolean groupDone,
 		@Min(0) Integer page,
 		@Min(1) @Max(200) Integer size) {

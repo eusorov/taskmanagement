@@ -4,7 +4,7 @@ import { ApiError, errorMessage, type Task } from '../api/client'
 import { CreateTaskForm } from './CreateTaskForm'
 import { EditTaskDialog } from './EditTaskDialog'
 import { FilterBar } from './FilterBar'
-import { DEFAULT_FILTERS, PAGE_SIZE, parseFilters, serializeFilters, type TaskFilters } from './filters'
+import { DEFAULT_FILTERS, isFiltered, PAGE_SIZE, parseFilters, serializeFilters, type TaskFilters } from './filters'
 import { useDeleteTask, useReloadTasks, useTasks, useUpdateTask } from './queries'
 import { TaskRow } from './TaskRow'
 
@@ -15,7 +15,7 @@ export function TaskListPage() {
     (next: TaskFilters) => setSearchParams(serializeFilters(next), { replace: true }),
     [setSearchParams],
   )
-  const isFiltered = searchParams.size > 0 && !(filters.page > 0 && searchParams.size === 1)
+  const filtered = isFiltered(filters)
 
   const tasks = useTasks(filters)
   const updateTask = useUpdateTask()
@@ -41,7 +41,7 @@ export function TaskListPage() {
         {tasks.data && (
           <p className="text-muted">
             {total} {total === 1 ? 'task' : 'tasks'}
-            {isFiltered && ' match'}
+            {filtered && ' match'}
           </p>
         )}
       </header>
@@ -80,12 +80,13 @@ export function TaskListPage() {
         </div>
       ) : tasks.data.items.length === 0 ? (
         <div className="mt-6 text-muted">
-          {isFiltered ? (
+          {filtered ? (
             <>
               <p>No tasks match these filters.</p>
               <button
                 type="button"
-                onClick={() => setFilters(DEFAULT_FILTERS)}
+                // Keeps the chosen order
+                onClick={() => setFilters({ ...DEFAULT_FILTERS, sort: filters.sort })}
                 className="mt-2 font-bold text-blue-pencil underline"
               >
                 Clear filters

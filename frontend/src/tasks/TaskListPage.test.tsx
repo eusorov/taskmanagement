@@ -213,6 +213,71 @@ describe('filters', () => {
   })
 })
 
+describe('sorting', () => {
+  beforeEach(() => {
+    api.add('Buy milk', 'URGENT')
+    api.add('Water plants', 'LOW', true)
+    api.add('Call mom', 'NORMAL')
+    api.add('Answer emails', 'LOW')
+  })
+
+  const sortBy = () => screen.getByRole('combobox', { name: 'Sort by' })
+
+  it('orders by priority by default, with done tasks last', async () => {
+    renderApp()
+
+    await screen.findByText('Call mom')
+    expect(sortBy()).toHaveValue('priority')
+    expect(taskNames()).toEqual(['Buy milk', 'Call mom', 'Answer emails', 'Water plants'])
+    expect(api.lastRequest('GET')?.query.has('sort')).toBe(false)
+  })
+
+  it('sorts by the chosen order and keeps it in the URL', async () => {
+    const { user, router } = renderApp()
+    await screen.findByText('Call mom')
+
+    await user.selectOptions(sortBy(), 'Name A–Z')
+
+    await waitFor(() => expect(taskNames()).toEqual(['Answer emails', 'Buy milk', 'Call mom', 'Water plants']))
+    expect(api.lastRequest('GET')?.query.get('sort')).toBe('name')
+    expect(api.lastRequest('GET')?.query.get('order')).toBe('asc')
+    expect(router.state.location.search).toBe('?sort=name')
+
+    await user.selectOptions(sortBy(), 'Oldest first')
+
+    await waitFor(() => expect(taskNames()).toEqual(['Buy milk', 'Call mom', 'Answer emails', 'Water plants']))
+    expect(api.lastRequest('GET')?.query.get('sort')).toBe('createdAt')
+    expect(api.lastRequest('GET')?.query.get('order')).toBe('asc')
+  })
+
+  it('restores the order from the URL and does not count it as a filter', async () => {
+    renderApp('/?sort=name-desc')
+
+    await screen.findByText('Call mom')
+    expect(sortBy()).toHaveValue('name-desc')
+    expect(taskNames()).toEqual(['Call mom', 'Buy milk', 'Answer emails', 'Water plants'])
+    expect(screen.getByText('4 tasks')).toBeInTheDocument()
+  })
+
+  it('goes back to the first page when the order changes', async () => {
+    const { user, router } = renderApp('/?page=1')
+    await screen.findByText('No tasks yet. Add the first one above.')
+
+    await user.selectOptions(sortBy(), 'Newest first')
+
+    await waitFor(() => expect(router.state.location.search).toBe('?sort=newest'))
+  })
+
+  it('keeps the order when filters are cleared', async () => {
+    const { user, router } = renderApp('/?q=nothing&sort=name')
+
+    await user.click(await screen.findByRole('button', { name: 'Clear filters' }))
+
+    await waitFor(() => expect(router.state.location.search).toBe('?sort=name'))
+    expect(sortBy()).toHaveValue('name')
+  })
+})
+
 describe('pagination', () => {
   it('pages through tasks 20 at a time', async () => {
     for (let i = 1; i <= 45; i++) api.add(`Task ${i}`)
@@ -226,7 +291,8 @@ describe('pagination', () => {
     await user.click(await screen.findByRole('button', { name: 'Next' }))
 
     expect(await screen.findByText('Page 3 of 3')).toBeInTheDocument()
-    await waitFor(() => expect(taskNames()).toEqual(['Task 41', 'Task 42', 'Task 43', 'Task 44', 'Task 45']))
+    // Newest first, so the last page holds the oldest tasks
+    await waitFor(() => expect(taskNames()).toEqual(['Task 5', 'Task 4', 'Task 3', 'Task 2', 'Task 1']))
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
     expect(router.state.location.search).toBe('?page=2')
   })

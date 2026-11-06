@@ -58,6 +58,12 @@
             "required": false,
             "schema": {
               "type": "string",
+              "enum": [
+                "priority",
+                "createdAt",
+                "updatedAt",
+                "name"
+              ],
               "pattern": "priority|createdAt|updatedAt|name"
             }
           },
@@ -67,6 +73,10 @@
             "required": false,
             "schema": {
               "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "pattern": "asc|desc"
             }
           },

@@ -115,8 +115,8 @@ export interface operations {
                 done?: boolean;
                 priority?: ("LOW" | "NORMAL" | "URGENT")[];
                 q?: string;
-                sort?: string;
-                order?: string;
+                sort?: "priority" | "createdAt" | "updatedAt" | "name";
+                order?: "asc" | "desc";
                 groupDone?: boolean;
                 page?: number;
                 size?: number;
