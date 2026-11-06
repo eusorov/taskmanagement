@@ -1,6 +1,7 @@
 package de.usorov.taskmanagement.controller;
 
 import static de.usorov.taskmanagement.db.jooq.Tables.TASKS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -22,9 +23,12 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, TestClockConfiguration.class})
+@ExtendWith(OutputCaptureExtension.class)
 class TaskControllerTest {
 
 	@Autowired
@@ -62,6 +67,19 @@ class TaskControllerTest {
 				.andExpect(jsonPath("$.done").value(false))
 				.andExpect(jsonPath("$.version").value(0))
 				.andExpect(jsonPath("$.createdAt").value("2026-01-01T10:00:00Z"));
+	}
+
+	@Test
+	void changesAreLoggedWithoutTaskNames(CapturedOutput output) throws Exception {
+		String id = create("{\"name\":\"secret plan\"}").get("id").asText();
+		patchTask(id, "{\"done\":true,\"version\":0}");
+		mvc.perform(delete("/api/tasks/{id}", id)).andExpect(status().isNoContent());
+
+		assertThat(output)
+				.contains("Created task " + id + " with priority NORMAL")
+				.contains("Updated task " + id + " to version 1")
+				.contains("Deleted task " + id)
+				.doesNotContain("secret plan");
 	}
 
 	@Test

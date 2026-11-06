@@ -20,5 +20,5 @@ COPY --from=build /build/extracted/application/ ./
 USER app
 # 8080: API, 9000: Actuator (internal only)
 EXPOSE 8080 9000
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+# Heap sized from the container memory limit; set here, not via JAVA_TOOL_OPTIONS, which prints a non-JSON line
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]

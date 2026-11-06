@@ -5,6 +5,7 @@ import de.usorov.taskmanagement.service.TaskLimitReachedException;
 import de.usorov.taskmanagement.service.TaskNotFoundException;
 import de.usorov.taskmanagement.service.VersionConflictException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /** Maps every error to an RFC 7807 problem; validation errors carry a {@code violations} array. */
+@Slf4j
 @RestControllerAdvice
 class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -34,6 +36,13 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler
 	ProblemDetail handle(TaskLimitReachedException ex) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	/** Anything unexpected: log it with the stack trace, but don't leak details to the client. */
+	@ExceptionHandler
+	ProblemDetail handle(Exception ex) {
+		log.error("Unexpected error", ex);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
 	}
 
 	@Override

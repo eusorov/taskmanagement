@@ -11,9 +11,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaskService {
@@ -38,12 +40,14 @@ public class TaskService {
 	@Transactional
 	public Task create(String name, Priority priority) {
 		if (taskRepository.count() >= TASK_LIMIT) {
+			log.warn("Task limit of {} reached, rejecting new task", TASK_LIMIT);
 			throw new TaskLimitReachedException(TASK_LIMIT);
 		}
 		Instant now = now();
 		Task task = new Task(
 				UUID.randomUUID(), name.strip(), priority == null ? Priority.NORMAL : priority, false, now, now, 0);
 		taskRepository.insert(task);
+		log.info("Created task {} with priority {}", task.id(), task.priority());
 		return task;
 	}
 
@@ -51,12 +55,15 @@ public class TaskService {
 	public Task update(UUID id, int expectedVersion, TaskChanges changes) {
 		TaskChanges stripped = new TaskChanges(
 				changes.name() == null ? null : changes.name().strip(), changes.priority(), changes.done());
-		return taskRepository.update(id, expectedVersion, stripped, now()).orElseThrow(() -> {
+		Task updated = taskRepository.update(id, expectedVersion, stripped, now()).orElseThrow(() -> {
 			if (taskRepository.existsById(id)) {
+				log.info("Rejected update of task {}: version {} is stale", id, expectedVersion);
 				return new VersionConflictException(id, expectedVersion);
 			}
 			return new TaskNotFoundException(id);
 		});
+		log.info("Updated task {} to version {}", id, updated.version());
+		return updated;
 	}
 
 	@Transactional
@@ -64,6 +71,7 @@ public class TaskService {
 		if (!taskRepository.deleteById(id)) {
 			throw new TaskNotFoundException(id);
 		}
+		log.info("Deleted task {}", id);
 	}
 
 	// Postgres stores microseconds; truncating keeps written and read values equal
