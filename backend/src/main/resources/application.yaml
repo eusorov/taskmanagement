@@ -1,6 +1,11 @@
 spring:
   application:
     name: taskmanagement
+  datasource:
+    # Keep replicas x maximum-pool-size below Postgres max_connections - ~10
+    hikari:
+      pool-name: taskmanagement
+      maximum-pool-size: 10
   jooq:
     sql-dialect: postgres
   liquibase:
