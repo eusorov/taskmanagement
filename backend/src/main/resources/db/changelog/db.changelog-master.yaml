@@ -1,0 +1,5 @@
+# Every migration is listed explicitly, in order: changes/NNNN-description.sql
+databaseChangeLog:
+  - include:
+      file: changes/0001-create-tasks.sql
+      relativeToChangelogFile: true

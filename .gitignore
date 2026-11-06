@@ -1,0 +1,23 @@
+# Repo-wide rules. Build output is ignored in each project's own .gitignore (backend/, frontend/).
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### IDEs ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+
+### Secrets and local config (only the examples are committed) ###
+.env
+

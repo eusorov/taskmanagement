@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: taskmanagement
+  jooq:
+    sql-dialect: postgres
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+# Actuator runs on its own port, which is never routed publicly
+management:
+  server:
+    port: 9000
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState, db
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  paths-to-match: /api/**
+  default-produces-media-type: application/json
