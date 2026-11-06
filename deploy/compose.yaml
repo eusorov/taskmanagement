@@ -1,0 +1,54 @@
+# Usage (from this directory): cp .env.example .env, set the password, then
+#   docker compose up -d --build
+name: taskmanagement
+
+services:
+  postgres:
+    image: postgres:17.11
+    environment:
+      POSTGRES_DB: taskmanagement
+      POSTGRES_USER: taskmanagement
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Port is never published
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskmanagement -d taskmanagement"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  backend:
+    build: ../backend
+    image: taskmanagement-backend:local
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskmanagement
+      SPRING_DATASOURCE_USERNAME: taskmanagement
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Published on localhost only until Caddy fronts the API; Actuator (9000) stays internal
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/actuator/health/liveness"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      # Long enough that a slow migration is never killed
+      start_period: 120s
+    labels:
+      autoheal: "true"
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  # Never run `docker compose down -v`: it deletes all tasks
+  postgres-data:

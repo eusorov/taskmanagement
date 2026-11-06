@@ -24,3 +24,4 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - For REST errors use ProblemDetails
 - add OpenAPI doc and document controller to create later client for the frontend 
 - add spring actuator endpoints for health checks
+- use dockerfile and docker compose for simple deployment (no kubernetes)
