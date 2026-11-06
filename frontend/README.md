@@ -51,11 +51,15 @@ Tests run in Vitest with Testing Library and use the fake API instead of a real 
 - one page, with a dialog for editing
 - api client generated from openapi spec
 - use problem detail
+- use nginx for serving react
+- use dockerfile and same docker compose as backend
 
 ## out of scope
 - auth (login)
 - no JWT
 - undo or confirmation for delete
+- spinners
 - live updates from other users (no websockets)
 - offline use (no local storage)
 - internationalization
+- https (Encrypt certificates)

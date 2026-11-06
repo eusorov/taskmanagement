@@ -1,5 +1,5 @@
 # Usage (from this directory): cp .env.example .env, set the password, then
-#   docker compose up -d --build
+#   docker compose up -d --build and open http://localhost (or the port set as FRONTEND_PORT in .env)
 name: taskmanagement
 
 services:
@@ -36,9 +36,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Published on localhost only until Caddy fronts the API; Actuator (9000) stays internal
-    ports:
-      - "127.0.0.1:8080:8080"
+    # No published ports: the API is reached through the frontend, Actuator (9000) stays internal
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9000/actuator/health/liveness"]
       interval: 10s
@@ -46,6 +44,25 @@ services:
       retries: 3
       # Long enough that a slow migration is never killed
       start_period: 120s
+    labels:
+      autoheal: "true"
+    restart: unless-stopped
+    logging: *logging
+
+  frontend:
+    build: ../frontend
+    image: taskmanagement-frontend:local
+    # nginx serves the app and forwards /api to the backend
+    ports:
+      - "${FRONTEND_PORT:-80}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     labels:
       autoheal: "true"
     restart: unless-stopped
