@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { limitName, MAX_NAME_LENGTH } from './taskName'
+import { limitName, MAX_NAME_LENGTH, stripName } from './taskName'
+
+describe('stripName', () => {
+  it('strips invisible characters from both ends, as the API does', () => {
+    expect(stripName('  Buy milk  ')).toBe('Buy milk')
+    expect(stripName(' Buy milk ')).toBe('Buy milk')
+    expect(stripName('​﻿Buy milk　')).toBe('Buy milk')
+    expect(stripName('\t\nBuy milk\r\n')).toBe('Buy milk')
+    // U+E0001 LANGUAGE TAG, a format character outside the basic plane
+    expect(stripName('\u{e0001}Buy milk\u{e0001}')).toBe('Buy milk')
+  })
+
+  it('keeps invisible characters inside', () => {
+    expect(stripName('Buy milk\nand​bread')).toBe('Buy milk\nand​bread')
+  })
+
+  it('strips a name of only invisible characters to nothing', () => {
+    expect(stripName(' ​ 　')).toBe('')
+  })
+})
 
 describe('limitName', () => {
   it('keeps names up to the limit', () => {

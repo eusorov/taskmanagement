@@ -3,7 +3,7 @@ import { ApiError, errorMessage, type Priority, type Task } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useLoadTask, useReloadTasks, useUpdateTask } from './queries'
-import { limitName } from './taskName'
+import { limitName, stripName } from './taskName'
 
 interface EditTaskDialogProps {
   task: Task
@@ -34,7 +34,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
     event.preventDefault()
     loadTask.reset()
     updateTask.mutate(
-      { task, changes: { name: name.trim(), priority } },
+      { task, changes: { name: stripName(name), priority } },
       {
         onSuccess: () => {
           showToast('Changes saved')
@@ -113,7 +113,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             </button>
             <button
               type="submit"
-              disabled={!name.trim() || updateTask.isPending || conflict}
+              disabled={!stripName(name) || updateTask.isPending || conflict}
               className="rounded-md bg-blue-pencil px-4 py-2 font-bold text-white disabled:opacity-40"
             >
               Save changes

@@ -83,6 +83,27 @@ describe('adding a task', () => {
     expect(screen.getByRole('button', { name: 'Add task' })).toBeDisabled()
   })
 
+  it('counts invisible characters as blank, as the API does', async () => {
+    const { user } = renderApp()
+    await screen.findByText(/No tasks yet/)
+
+    // A zero-width space, which String.trim keeps but the API counts as blank
+    await user.type(screen.getByRole('textbox', { name: 'Task name' }), ' ​ ')
+
+    expect(screen.getByRole('button', { name: 'Add task' })).toBeDisabled()
+  })
+
+  it('sends the name without invisible characters at its ends', async () => {
+    const { user } = renderApp()
+    await screen.findByText(/No tasks yet/)
+
+    await user.type(screen.getByRole('textbox', { name: 'Task name' }), '​Book dentist​')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    expect(await screen.findByText('Book dentist')).toBeInTheDocument()
+    expect(api.lastRequest('POST')?.body).toEqual({ name: 'Book dentist', priority: 'NORMAL', done: false })
+  })
+
   it('shows why the server rejected the task', async () => {
     api.failNext('POST', 400, { detail: 'Invalid request', violations: [{ field: 'name', message: 'must not be blank' }] })
     const { user } = renderApp()

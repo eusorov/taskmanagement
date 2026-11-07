@@ -3,7 +3,7 @@ import { errorMessage, type Priority } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useCreateTask } from './queries'
-import { limitName } from './taskName'
+import { limitName, stripName } from './taskName'
 
 export function CreateTaskForm() {
   const [name, setName] = useState('')
@@ -15,7 +15,7 @@ export function CreateTaskForm() {
   function submit(event: FormEvent) {
     event.preventDefault()
     createTask.mutate(
-      { name: name.trim(), priority, done },
+      { name: stripName(name), priority, done },
       {
         onSuccess: () => {
           setName('')
@@ -39,7 +39,7 @@ export function CreateTaskForm() {
         />
         <button
           type="submit"
-          disabled={!name.trim() || createTask.isPending}
+          disabled={!stripName(name) || createTask.isPending}
           className="rounded-md bg-blue-pencil px-4 py-2 font-bold text-white disabled:opacity-40"
         >
           Add task
