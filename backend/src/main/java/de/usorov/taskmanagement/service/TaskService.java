@@ -22,9 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TaskService {
 
-	/** Soft limit: concurrent creates can exceed it slightly. */
-	static final int TASK_LIMIT = 10_000;
-
 	private final TaskRepository taskRepository;
 	private final Clock clock;
 
@@ -43,10 +40,6 @@ public class TaskService {
 
 	@Transactional
 	public Task create(String name, Priority priority, boolean done) {
-		if (taskRepository.count() >= TASK_LIMIT) {
-			log.warn("Task limit of {} reached, rejecting new task", TASK_LIMIT);
-			throw new TaskLimitReachedException(TASK_LIMIT);
-		}
 		Instant now = now();
 		Task task = new Task(UUID.randomUUID(), name, priority, done, now, now, 0);
 		taskRepository.insert(task);

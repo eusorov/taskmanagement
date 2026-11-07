@@ -1,7 +1,6 @@
 package de.usorov.taskmanagement.controller;
 
 import de.usorov.taskmanagement.controller.dto.ApiProblem.Violation;
-import de.usorov.taskmanagement.service.TaskLimitReachedException;
 import de.usorov.taskmanagement.service.TaskNotFoundException;
 import de.usorov.taskmanagement.service.VersionConflictException;
 import java.util.List;
@@ -30,11 +29,6 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler
 	ProblemDetail handle(VersionConflictException ex) {
-		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-	}
-
-	@ExceptionHandler
-	ProblemDetail handle(TaskLimitReachedException ex) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 	}
 

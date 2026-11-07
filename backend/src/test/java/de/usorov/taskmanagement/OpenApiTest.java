@@ -52,7 +52,7 @@ class OpenApiTest {
 		String json = "application/problem+json";
 		mvc.perform(get("/v3/api-docs"))
 				.andExpect(jsonPath("$.paths['/api/tasks'].get.responses.keys()").value(containsInAnyOrder("200", "400")))
-				.andExpect(jsonPath("$.paths['/api/tasks'].post.responses.keys()").value(containsInAnyOrder("201", "400", "409")))
+				.andExpect(jsonPath("$.paths['/api/tasks'].post.responses.keys()").value(containsInAnyOrder("201", "400")))
 				.andExpect(jsonPath("$.paths['/api/tasks'].post.responses['201'].headers.Location").exists())
 				.andExpect(jsonPath("$.paths['/api/tasks/{id}'].get.responses.keys()")
 						.value(containsInAnyOrder("200", "400", "404")))

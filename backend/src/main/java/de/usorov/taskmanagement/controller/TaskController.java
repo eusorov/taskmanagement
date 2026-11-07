@@ -59,10 +59,6 @@ public class TaskController {
 			responseCode = "400",
 			description = "Invalid request body",
 			content = @Content(mediaType = PROBLEM_JSON, schema = @Schema(implementation = ApiProblem.class)))
-	@ApiResponse(
-			responseCode = "409",
-			description = "Task limit reached",
-			content = @Content(mediaType = PROBLEM_JSON, schema = @Schema(implementation = ApiProblem.class)))
 	public ResponseEntity<TaskResponse> create(@Valid @RequestBody CreateTaskRequest request) {
 		Task task = taskService.create(request.name(), request.priority(), request.done());
 		var location = ServletUriComponentsBuilder.fromCurrentRequest()

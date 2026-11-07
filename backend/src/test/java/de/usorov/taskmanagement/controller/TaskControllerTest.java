@@ -142,14 +142,6 @@ class TaskControllerTest {
 	}
 
 	@Test
-	void createFailsWhenTaskLimitReached() throws Exception {
-		dsl.execute("insert into tasks (id, name) select gen_random_uuid(), 'task' from generate_series(1, 10000)");
-
-		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"one more\"}"))
-				.andExpect(status().isConflict());
-	}
-
-	@Test
 	void getReturnsTask() throws Exception {
 		JsonNode task = create("{\"name\":\"Read\",\"priority\":\"URGENT\"}");
 

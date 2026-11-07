@@ -84,14 +84,14 @@ describe('adding a task', () => {
   })
 
   it('shows why the server rejected the task', async () => {
-    api.failNext('POST', 409, { detail: 'Task limit of 10000 reached' })
+    api.failNext('POST', 400, { detail: 'Invalid request', violations: [{ field: 'name', message: 'must not be blank' }] })
     const { user } = renderApp()
     await screen.findByText(/No tasks yet/)
 
     await user.type(screen.getByRole('textbox', { name: 'Task name' }), 'One more')
     await user.click(screen.getByRole('button', { name: 'Add task' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Task limit of 10000 reached')
+    expect(await screen.findByRole('alert')).toHaveTextContent('name: must not be blank')
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('One more')
   })

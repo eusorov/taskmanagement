@@ -2,7 +2,6 @@ package de.usorov.taskmanagement.controller;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -23,7 +22,6 @@ import de.usorov.taskmanagement.model.TaskChanges;
 import de.usorov.taskmanagement.model.TaskPage;
 import de.usorov.taskmanagement.model.TaskSearch;
 import de.usorov.taskmanagement.model.TaskSortField;
-import de.usorov.taskmanagement.service.TaskLimitReachedException;
 import de.usorov.taskmanagement.service.TaskNotFoundException;
 import de.usorov.taskmanagement.service.TaskService;
 import de.usorov.taskmanagement.service.VersionConflictException;
@@ -316,15 +314,6 @@ class TaskControllerWebMvcTest {
 				.andExpect(jsonPath("$.violations[0].message").value("must not contain NUL characters"));
 
 		verifyNoInteractions(taskService);
-	}
-
-	@Test
-	void createMapsTaskLimitTo409() throws Exception {
-		when(taskService.create(any(), any(), anyBoolean())).thenThrow(new TaskLimitReachedException(10_000));
-
-		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"one more\"}"))
-				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.detail").value("Task limit of 10000 reached"));
 	}
 
 	@Test

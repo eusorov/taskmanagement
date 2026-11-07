@@ -176,16 +176,6 @@
                 }
               }
             }
-          },
-          "409": {
-            "description": "Task limit reached",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
           }
         }
       }

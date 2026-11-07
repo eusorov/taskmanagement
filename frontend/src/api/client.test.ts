@@ -32,8 +32,8 @@ describe('errorMessage', () => {
   })
 
   it('uses the problem detail for client errors', () => {
-    expect(errorMessage(new ApiError(409, { type: 'about:blank', title: 'Conflict', status: 409, detail: 'Task limit of 10000 reached' }))).toBe(
-      'Task limit of 10000 reached',
+    expect(errorMessage(new ApiError(404, { type: 'about:blank', title: 'Not Found', status: 404, detail: 'Task 42 not found' }))).toBe(
+      'Task 42 not found',
     )
   })
 
