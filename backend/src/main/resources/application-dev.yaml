@@ -1,0 +1,4 @@
+# Local development: ./mvnw spring-boot:test-run -Dspring-boot.run.profiles=dev
+app:
+  demo-tasks:
+    enabled: true

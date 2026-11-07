@@ -18,12 +18,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Adds sample tasks on startup when the database is empty, so a fresh setup has something to show. Switch off with
- * {@code app.demo-tasks.enabled=false}.
+ * Adds sample tasks on startup when the database is empty, so a fresh setup has something to show. Only with
+ * {@code app.demo-tasks.enabled=true}, which the {@code dev} profile sets.
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "app.demo-tasks.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.demo-tasks.enabled", havingValue = "true")
 class DemoTasksConfiguration {
 
 	// Arbitrary key for pg_advisory_xact_lock, so replicas starting together seed only once

@@ -16,6 +16,7 @@ import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 class DemoTasksConfigurationTest {
 
@@ -23,8 +24,9 @@ class DemoTasksConfigurationTest {
 
 	@Nested
 	@SpringBootTest
+	@ActiveProfiles("dev")
 	@Import(TestcontainersConfiguration.class)
-	class Enabled {
+	class EnabledInDev {
 
 		@Autowired
 		DSLContext dsl;
@@ -60,9 +62,9 @@ class DemoTasksConfigurationTest {
 	}
 
 	@Nested
-	@SpringBootTest(properties = "app.demo-tasks.enabled=false")
+	@SpringBootTest
 	@Import(TestcontainersConfiguration.class)
-	class Disabled {
+	class DisabledByDefault {
 
 		@Autowired
 		DSLContext dsl;

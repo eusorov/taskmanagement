@@ -12,9 +12,12 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 
 ## Common tasks
 
-- Run tests | `./mvnw test`
-- Run locally with a throwaway Postgres | `./mvnw spring-boot:test-run`
-- Generate jOOQ sources | `./mvnw -Pjooq-codegen generate-sources`
+| Task                                  | Command |
+|---------------------------------------|---|
+| Run tests                             | `./mvnw test`
+| Run locally with a throwaway Postgres | `./mvnw spring-boot:test-run` (prod settings; add `-Dspring-boot.run.profiles=dev` for demo tasks)
+| Generate jOOQ sources                 | `./mvnw -Pjooq-codegen generate-sources`
+| run docker in dev mode                | SPRING_PROFILES_ACTIVE=dev docker compose up -d
 
 ## Design decisions
 - no auth was required, to keep simple no auth was implemented
@@ -29,7 +32,7 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - use dockerfile and docker compose for simple deployment (no kubernetes)
 - use Lombok for simplicity 
 - add webMvcTests and integration tests for controller
-- add 20 demo tasks on startup if db is empty
+- add 20 demo tasks on startup if db is empty, only in the `dev` profile
 
 ## out of scope
 - auth

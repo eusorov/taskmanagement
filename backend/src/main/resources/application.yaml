@@ -55,5 +55,5 @@ springdoc:
 
 app:
   demo-tasks:
-    # Adds sample tasks on startup when the database is empty; switch off with APP_DEMO_TASKS_ENABLED=false
-    enabled: true
+    # Adds sample tasks on startup when the database is empty. Off by default; on in the dev profile
+    enabled: false
