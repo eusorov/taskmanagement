@@ -181,7 +181,7 @@
 									<database>
 										<type>POSTGRES</type>
 										<!-- Same Postgres version as compose.yaml and compose.dev.yaml -->
-										<containerImage>postgres:17.11</containerImage>
+										<containerImage>postgres:18.6</containerImage>
 									</database>
 									<liquibase>
 										<changeLogDirectory>${project.basedir}/src/main/resources/db/changelog</changeLogDirectory>
