@@ -1,3 +1,6 @@
+--liquibase formatted sql
+
+--changeset includeAll:raw
 create type task_priority as enum ('LOW', 'NORMAL', 'URGENT');
 
 create table tasks (

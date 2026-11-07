@@ -1,3 +1,6 @@
+--liquibase formatted sql
+
+--changeset includeAll:raw
 -- One index per list order the UI offers, each in the exact order of TaskRepository.orderFor: open before done, the
 -- chosen column, then id. Without them every list read the whole table and sorted it. A backward scan would flip done
 -- and id too, so each direction needs its own index. The old all-ascending index served none of these orders.

@@ -1,4 +1,5 @@
 # Every migration is listed explicitly, in order: changes/NNNN-description.sql
+# Applied changesets are frozen: edit only above the --changeset line, add a new file for any schema change
 databaseChangeLog:
   - include:
       file: changes/0001-create-tasks.sql
