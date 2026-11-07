@@ -13,6 +13,8 @@ spring:
     deserialization:
       # Reject {"version": 0.7} instead of silently truncating it to 0
       accept-float-as-int: false
+      # Reject {"Done": true}: a misspelled field would otherwise be dropped, and the patch succeed without changes
+      fail-on-unknown-properties: true
   # Only the dev profile starts compose.dev.yaml; elsewhere the datasource is configured
   docker:
     compose:

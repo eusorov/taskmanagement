@@ -372,6 +372,28 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
+	void patchRejectsUnknownFieldWithoutCallingService() throws Exception {
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"Done\":true,\"version\":0}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void createRejectsUnknownFieldWithoutCallingService() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Buy milk\",\"dueDate\":\"2026-12-01\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
 	void patchMapsVersionConflictTo409() throws Exception {
 		when(taskService.update(eq(ID), eq(2), any())).thenThrow(new VersionConflictException(ID, 2));
 
