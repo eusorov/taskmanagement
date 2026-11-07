@@ -14,6 +14,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -27,7 +28,9 @@ public class TaskService {
 	private final TaskRepository taskRepository;
 	private final Clock clock;
 
-	@Transactional(readOnly = true)
+	// One snapshot for both queries, so a concurrent write can't make total disagree with the page. Read-only
+	// transactions never fail with serialization errors in Postgres, so this needs no retry.
+	@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 	public TaskPage find(TaskSearch search) {
 		return new TaskPage(
 				taskRepository.find(search), search.page(), search.size(), taskRepository.count(search));
