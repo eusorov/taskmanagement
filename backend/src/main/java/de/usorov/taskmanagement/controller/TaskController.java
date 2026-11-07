@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping(path = "/api/tasks", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class TaskController {
 

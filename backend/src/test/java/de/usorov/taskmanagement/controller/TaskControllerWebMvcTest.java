@@ -207,6 +207,38 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
+	void createRejectsNonJsonAcceptWithoutCallingService() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.accept(MediaType.TEXT_HTML)
+						.content("{\"name\":\"Buy milk\"}"))
+				.andExpect(status().isNotAcceptable());
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void patchAndDeleteRejectNonJsonAcceptWithoutCallingService() throws Exception {
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.accept(MediaType.TEXT_HTML)
+						.content("{\"done\":true,\"version\":0}"))
+				.andExpect(status().isNotAcceptable());
+		mvc.perform(delete("/api/tasks/{id}", ID).accept(MediaType.TEXT_HTML)).andExpect(status().isNotAcceptable());
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void errorsAreStillProblemJson() throws Exception {
+		when(taskService.get(ID)).thenThrow(new TaskNotFoundException(ID));
+
+		mvc.perform(get("/api/tasks/{id}", ID).accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+	}
+
+	@Test
 	void createPassesTrimmedNameToService() throws Exception {
 		when(taskService.create("Buy milk", null)).thenReturn(TASK);
 
