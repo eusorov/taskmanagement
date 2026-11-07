@@ -41,7 +41,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
   }
 
   return (
-    <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule pb-3">
+    <div data-testid="filter-bar" className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule pb-3">
       {/* A visible label, like "Sort by", instead of a placeholder that is gone while typing */}
       <label className="flex w-full items-center gap-2 text-sm text-muted sm:w-auto">
         Search tasks
@@ -49,6 +49,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
           type="search"
           value={query}
           onChange={(event) => setQuery(limitQuery(event.target.value))}
+          data-testid="filter-search"
           className="min-w-0 flex-1 rounded-md border border-edge bg-white px-3 py-1.5 text-base text-ink sm:w-44 sm:flex-none"
         />
       </label>
@@ -59,6 +60,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
             type="button"
             aria-pressed={filters.status === value}
             onClick={() => onChange({ ...filters, status: value, page: 0 })}
+            data-testid={`filter-status-${value}`}
             className="rounded px-2.5 py-1 text-sm text-muted aria-pressed:bg-ink aria-pressed:text-white"
           >
             {label}
@@ -72,6 +74,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
             type="button"
             aria-pressed={filters.priorities.includes(priority)}
             onClick={() => togglePriority(priority)}
+            data-testid={`filter-priority-${priority.toLowerCase()}`}
             className="flex items-center gap-1.5 rounded border border-transparent px-2.5 py-1 text-sm text-muted aria-pressed:border-ink aria-pressed:text-ink"
           >
             <PriorityStroke priority={priority} />
@@ -84,6 +87,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
         <select
           value={filters.sort}
           onChange={(event) => onChange({ ...filters, sort: event.target.value as SortOption, page: 0 })}
+          data-testid="filter-sort"
           className="rounded-md border border-edge bg-white px-2 py-1 text-ink"
         >
           {Object.entries(SORT_OPTIONS).map(([value, { label }]) => (

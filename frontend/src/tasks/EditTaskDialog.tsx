@@ -74,6 +74,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-task-title"
+        data-testid="edit-task-dialog"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={keepFocusInside}
         className="w-full max-w-lg rounded-lg bg-paper p-6 shadow-xl"
@@ -87,11 +88,12 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             value={name}
             onChange={(event) => setName(limitName(event.target.value))}
             aria-label="Task name"
+            data-testid="edit-task-name"
             className="rounded-md border border-edge bg-white px-3 py-2 text-lg"
           />
-          <PriorityPicker name="edit-task-priority" value={priority} onChange={setPriority} />
+          <PriorityPicker name="edit-task-priority" value={priority} onChange={setPriority} testId="edit-task-priority" />
           {conflict ? (
-            <div role="alert" className="rounded-md border border-red-pencil/40 bg-white p-3 text-sm">
+            <div role="alert" data-testid="edit-task-conflict" className="rounded-md border border-red-pencil/40 bg-white p-3 text-sm">
               <p>
                 {status === 404
                   ? 'Someone else deleted this task while you were editing.'
@@ -101,6 +103,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
                 type="button"
                 onClick={status === 404 ? reloadList : reloadTask}
                 disabled={loadTask.isPending}
+                data-testid="edit-task-reload"
                 className="mt-2 font-bold text-blue-pencil underline disabled:opacity-40"
               >
                 {status === 404 ? 'Reload list' : 'Reload task'}
@@ -108,7 +111,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             </div>
           ) : (
             error && (
-              <p role="alert" className="text-sm text-red-pencil">
+              <p role="alert" data-testid="edit-task-error" className="text-sm text-red-pencil">
                 {errorMessage(error)}
               </p>
             )
@@ -118,6 +121,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
               type="button"
               onClick={onClose}
               disabled={saving}
+              data-testid="edit-task-cancel"
               className="rounded-md px-4 py-2 text-muted disabled:opacity-40"
             >
               Cancel
@@ -125,6 +129,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             <button
               type="submit"
               disabled={!stripName(name) || saving || conflict}
+              data-testid="edit-task-save"
               className="rounded-md bg-blue-pencil px-4 py-2 font-bold text-white disabled:opacity-40"
             >
               Save changes

@@ -45,13 +45,13 @@ export function TaskListPage() {
   }, [pastLastPage, filters, pages, setFilters])
 
   return (
-    <main className="mx-auto max-w-2xl px-4 pt-12 pb-24">
+    <main data-testid="task-list-page" className="mx-auto max-w-2xl px-4 pt-12 pb-24">
       {/* Out of reach of keyboard, mouse and screen readers while the dialog is open */}
       <div inert={editing !== null}>
         <header className="flex items-baseline justify-between gap-4">
           <h1 className="text-4xl font-bold tracking-tight">Tasks</h1>
           {/* Always rendered, so screen readers announce the new count after a search or filter */}
-          <p aria-live="polite" className="text-muted">
+          <p aria-live="polite" data-testid="task-count" className="text-muted">
             {tasks.data && (
               <>
                 {total} {total === 1 ? 'task' : 'tasks'}
@@ -66,16 +66,23 @@ export function TaskListPage() {
 
         {/* Past the last page, keep "Loading" up until the jump instead of a wrong "No tasks yet" */}
         {tasks.isPending || pastLastPage ? (
-          <p className="mt-6 text-muted">Loading tasks…</p>
+          <p data-testid="task-list-loading" className="mt-6 text-muted">
+            Loading tasks…
+          </p>
         ) : tasks.isError ? (
-          <div role="alert" className="mt-6">
+          <div role="alert" data-testid="task-list-error" className="mt-6">
             <p>{errorMessage(tasks.error)}</p>
-            <button type="button" onClick={() => tasks.refetch()} className="mt-2 font-bold text-blue-pencil underline">
+            <button
+              type="button"
+              onClick={() => tasks.refetch()}
+              data-testid="task-list-retry"
+              className="mt-2 font-bold text-blue-pencil underline"
+            >
               Try again
             </button>
           </div>
         ) : tasks.data.items.length === 0 ? (
-          <div className="mt-6 text-muted">
+          <div data-testid="task-list-empty" className="mt-6 text-muted">
             {filtered ? (
               <>
                 <p>No tasks match these filters.</p>
@@ -83,6 +90,7 @@ export function TaskListPage() {
                   type="button"
                   // Keeps the chosen order
                   onClick={() => setFilters({ ...DEFAULT_FILTERS, sort: filters.sort })}
+                  data-testid="clear-filters"
                   className="mt-2 font-bold text-blue-pencil underline"
                 >
                   Clear filters
@@ -93,7 +101,7 @@ export function TaskListPage() {
             )}
           </div>
         ) : (
-          <ul aria-label="Tasks">
+          <ul aria-label="Tasks" data-testid="task-list">
             {tasks.data.items.map((task) => (
               <TaskRow key={task.id} task={task} saving={savingTaskIds.has(task.id)} onEdit={openEditor} />
             ))}
@@ -101,23 +109,25 @@ export function TaskListPage() {
         )}
 
         {pages > 1 && (
-          <nav aria-label="Pages" className="mt-6 flex items-center justify-between text-sm">
+          <nav aria-label="Pages" data-testid="pagination" className="mt-6 flex items-center justify-between text-sm">
             <button
               type="button"
               disabled={filters.page === 0}
               onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
+              data-testid="pagination-previous"
               className="rounded px-3 py-1.5 text-blue-pencil disabled:text-muted disabled:opacity-50"
             >
               Previous
             </button>
             {/* Announced, since the focus stays on Previous or Next */}
-            <span aria-live="polite" className="text-muted">
+            <span aria-live="polite" data-testid="pagination-status" className="text-muted">
               Page {filters.page + 1} of {pages}
             </span>
             <button
               type="button"
               disabled={filters.page + 1 >= pages}
               onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+              data-testid="pagination-next"
               className="rounded px-3 py-1.5 text-blue-pencil disabled:text-muted disabled:opacity-50"
             >
               Next

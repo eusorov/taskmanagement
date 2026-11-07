@@ -16,11 +16,13 @@ interface PriorityPickerProps {
   name: string
   value: Priority
   onChange: (priority: Priority) => void
+  /** Of the group; each option adds its priority, e.g. `create-task-priority-urgent` */
+  testId: string
 }
 
-export function PriorityPicker({ name, value, onChange }: PriorityPickerProps) {
+export function PriorityPicker({ name, value, onChange, testId }: PriorityPickerProps) {
   return (
-    <fieldset className="flex rounded-md border border-edge bg-white p-0.5">
+    <fieldset data-testid={testId} className="flex rounded-md border border-edge bg-white p-0.5">
       <legend className="sr-only">Priority</legend>
       {PRIORITIES.map((priority) => (
         <label
@@ -33,6 +35,7 @@ export function PriorityPicker({ name, value, onChange }: PriorityPickerProps) {
             value={priority}
             checked={value === priority}
             onChange={() => onChange(priority)}
+            data-testid={`${testId}-${priority.toLowerCase()}`}
             className="sr-only"
           />
           <PriorityStroke priority={priority} />

@@ -32,7 +32,7 @@ export function CreateTaskForm() {
   }
 
   return (
-    <form onSubmit={submit} className="mt-8">
+    <form onSubmit={submit} data-testid="create-task-form" className="mt-8">
       {/* Visible, unlike the placeholder, which is gone as soon as typing starts */}
       <label htmlFor={nameId} className="text-sm text-muted">
         Task name
@@ -45,31 +45,34 @@ export function CreateTaskForm() {
           aria-invalid={invalid || undefined}
           aria-describedby={createTask.isError ? errorId : undefined}
           placeholder="What needs doing?"
+          data-testid="create-task-name"
           className="min-w-0 flex-1 rounded-md border border-edge bg-white px-3 py-2 text-lg placeholder:text-muted"
         />
         <button
           type="submit"
           disabled={!stripName(name) || createTask.isPending}
+          data-testid="create-task-submit"
           className="rounded-md bg-blue-pencil px-4 py-2 font-bold text-white disabled:opacity-40"
         >
           Add task
         </button>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <PriorityPicker name="new-task-priority" value={priority} onChange={setPriority} />
+        <PriorityPicker name="new-task-priority" value={priority} onChange={setPriority} testId="create-task-priority" />
         {/* For logging something that's already finished */}
         <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
           <input
             type="checkbox"
             checked={done}
             onChange={(event) => setDone(event.target.checked)}
+            data-testid="create-task-done"
             className="size-4 accent-blue-pencil"
           />
           Already done
         </label>
       </div>
       {createTask.isError && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-red-pencil">
+        <p id={errorId} role="alert" data-testid="create-task-error" className="mt-2 text-sm text-red-pencil">
           {errorMessage(createTask.error)}
         </p>
       )}

@@ -12,6 +12,7 @@ export function ProgressBar() {
     <div
       role="progressbar"
       aria-label="Loading"
+      data-testid="progress-bar"
       className="animate-progress-in fixed inset-x-0 top-0 z-30 h-1 overflow-hidden bg-blue-pencil/20"
     >
       {/* Without motion it stays put and spans the whole width */}
