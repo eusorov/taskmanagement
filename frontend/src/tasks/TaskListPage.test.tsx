@@ -154,8 +154,33 @@ describe('changing a task', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
     await user.click(within(alert).getByRole('button', { name: 'Reload task' }))
 
+    // The dialog stays open with the latest version, so the change can be made again on top of it
+    const dialog = screen.getByRole('dialog', { name: 'Edit task' })
+    const name = within(dialog).getByRole('textbox', { name: 'Task name' })
+    await waitFor(() => expect(name).toHaveValue('Pay rent today'))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(within(taskList()).getByText('Pay rent today')).toBeInTheDocument()
+
+    await user.type(name, ' and bills')
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(api.lastRequest('PATCH')?.body).toEqual({ name: 'Pay rent today and bills', priority: 'NORMAL', version: 1 })
+  })
+
+  it('explains when a task to reload was deleted in the meantime', async () => {
+    const task = api.add('Pay rent')
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Pay rent' }))
+    api.changeElsewhere(task, { name: 'Pay rent today' })
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    api.tasks.splice(api.tasks.indexOf(task), 1)
+    await user.click(within(await screen.findByRole('alert')).getByRole('button', { name: 'Reload task' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Someone else deleted this task while you were editing')
+    await user.click(screen.getByRole('button', { name: 'Reload list' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(await screen.findByText('Pay rent today')).toBeInTheDocument()
   })
 
   it('offers a reload when the task was deleted elsewhere while editing', async () => {

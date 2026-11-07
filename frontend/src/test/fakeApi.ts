@@ -72,6 +72,7 @@ export class FakeApi {
 
     const id = url.pathname.match(/^\/api\/tasks\/(.+)$/)?.[1]
     if (url.pathname === '/api/tasks' && request.method === 'GET') return this.list(url.searchParams)
+    if (id && request.method === 'GET') return this.get(id)
     if (url.pathname === '/api/tasks' && request.method === 'POST')
       return this.create(body as Pick<Task, 'name'> & Partial<Pick<Task, 'priority' | 'done'>>)
     if (id && request.method === 'PATCH') return this.update(id, body as Partial<Task> & { version: number })
@@ -91,6 +92,11 @@ export class FakeApi {
       .filter((t) => !q || t.name.toLowerCase().includes(q))
       .sort(compareLikeBackend(query))
     return json(200, { items: matching.slice(page * size, (page + 1) * size), page, size, total: matching.length })
+  }
+
+  private get(id: string) {
+    const task = this.find(id)
+    return task ? json(200, task) : problemResponse(404)
   }
 
   private create({ name, priority, done }: Pick<Task, 'name'> & Partial<Pick<Task, 'priority' | 'done'>>) {

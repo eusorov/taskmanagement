@@ -70,6 +70,13 @@ export function useSavingTaskIds(): Set<string> {
   return new Set([...updating, ...deleting])
 }
 
+/** The latest version of one task, e.g. after a save was rejected as stale. */
+export function useLoadTask() {
+  return useMutation({
+    mutationFn: async (id: string) => unwrap(await api.GET('/api/tasks/{id}', { params: { path: { id } } })),
+  })
+}
+
 export function useReloadTasks() {
   const queryClient = useQueryClient()
   return () => queryClient.invalidateQueries({ queryKey: TASKS })

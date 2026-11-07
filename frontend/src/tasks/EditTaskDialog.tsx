@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, errorMessage, type Priority, type Task } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
-import { useReloadTasks, useUpdateTask } from './queries'
+import { useLoadTask, useReloadTasks, useUpdateTask } from './queries'
 import { limitName } from './taskName'
 
 interface EditTaskDialogProps {
@@ -10,13 +10,17 @@ interface EditTaskDialogProps {
   onClose: () => void
 }
 
-export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
+export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogProps) {
+  // Replaced by the latest version on "Reload task", so the next save sends that version
+  const [task, setTask] = useState(initialTask)
   const [name, setName] = useState(task.name)
   const [priority, setPriority] = useState<Priority>(task.priority)
   const updateTask = useUpdateTask()
+  const loadTask = useLoadTask()
   const reloadTasks = useReloadTasks()
   const showToast = useToast()
-  const status = updateTask.error instanceof ApiError ? updateTask.error.status : undefined
+  const error = loadTask.error ?? updateTask.error
+  const status = error instanceof ApiError ? error.status : undefined
   // Changed (409) or deleted (404) by someone else: saving again can't succeed, only a reload helps
   const conflict = status === 409 || status === 404
 
@@ -28,6 +32,7 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
 
   function submit(event: FormEvent) {
     event.preventDefault()
+    loadTask.reset()
     updateTask.mutate(
       { task, changes: { name: name.trim(), priority } },
       {
@@ -39,7 +44,21 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
     )
   }
 
-  function reload() {
+  // Shows the other change in the form, discarding this one, which was made on top of an older version
+  function reloadTask() {
+    loadTask.mutate(task.id, {
+      onSuccess: (latest) => {
+        setTask(latest)
+        setName(latest.name)
+        setPriority(latest.priority)
+        updateTask.reset()
+      },
+      // The list shows the latest too, or drops the task if it was deleted
+      onSettled: () => reloadTasks(),
+    })
+  }
+
+  function reloadList() {
     reloadTasks()
     onClose()
   }
@@ -72,14 +91,19 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
                   ? 'Someone else deleted this task while you were editing.'
                   : 'Someone else changed this task while you were editing. Reload to see the latest version.'}
               </p>
-              <button type="button" onClick={reload} className="mt-2 font-bold text-blue-pencil underline">
+              <button
+                type="button"
+                onClick={status === 404 ? reloadList : reloadTask}
+                disabled={loadTask.isPending}
+                className="mt-2 font-bold text-blue-pencil underline disabled:opacity-40"
+              >
                 {status === 404 ? 'Reload list' : 'Reload task'}
               </button>
             </div>
           ) : (
-            updateTask.isError && (
+            error && (
               <p role="alert" className="text-sm text-red-pencil">
-                {errorMessage(updateTask.error)}
+                {errorMessage(error)}
               </p>
             )
           )}
