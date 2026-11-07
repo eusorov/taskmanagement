@@ -17,6 +17,7 @@ export class FakeApi {
   requests: RecordedRequest[] = []
   /** Status to answer the next matching request with, instead of handling it. */
   private failures: { method: string; status: number; problem?: Partial<Problem> }[] = []
+  private holds: { method: string; released: Promise<void> }[] = []
   private clock = Date.parse('2026-01-01T10:00:00Z')
 
   install() {
@@ -33,6 +34,13 @@ export class FakeApi {
 
   failNext(method: string, status: number, problem?: Partial<Problem>) {
     this.failures.push({ method, status, problem })
+  }
+
+  /** Keeps the next matching request waiting until the returned function is called, to see the UI while it's in flight. */
+  holdNext(method: string): () => void {
+    let release!: () => void
+    this.holds.push({ method, released: new Promise((resolve) => (release = resolve)) })
+    return release
   }
 
   /** Simulates another user changing a task, so the version the UI holds goes stale. */
@@ -52,6 +60,9 @@ export class FakeApi {
     const url = new URL(request.url)
     const body = request.method === 'GET' || request.method === 'DELETE' ? undefined : await request.json()
     this.requests.push({ method: request.method, path: url.pathname, query: url.searchParams, body })
+
+    const hold = this.holds.findIndex((h) => h.method === request.method)
+    if (hold >= 0) await this.holds.splice(hold, 1)[0].released
 
     const failure = this.failures.findIndex((f) => f.method === request.method)
     if (failure >= 0) {

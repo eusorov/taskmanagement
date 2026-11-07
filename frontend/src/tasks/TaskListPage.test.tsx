@@ -194,6 +194,52 @@ describe('changing a task', () => {
   })
 })
 
+describe('progress bar', () => {
+  const progressBar = () => screen.queryByRole('progressbar', { name: 'Loading' })
+
+  it('shows while the tasks load', async () => {
+    api.add('Pay rent')
+    const release = api.holdNext('GET')
+    renderApp()
+
+    await waitFor(() => expect(progressBar()).toBeInTheDocument())
+    release()
+    expect(await screen.findByText('Pay rent')).toBeInTheDocument()
+    await waitFor(() => expect(progressBar()).not.toBeInTheDocument())
+  })
+
+  it('shows while a change is saved', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+    await waitFor(() => expect(progressBar()).not.toBeInTheDocument())
+
+    const release = api.holdNext('PATCH')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    expect(progressBar()).toBeInTheDocument()
+    release()
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeChecked())
+    await waitFor(() => expect(progressBar()).not.toBeInTheDocument())
+  })
+
+  it('shows while a new filter result loads', async () => {
+    api.add('Pay rent')
+    api.add('Water plants', 'NORMAL', true)
+    const { user } = renderApp()
+    await screen.findByText('Water plants')
+    await waitFor(() => expect(progressBar()).not.toBeInTheDocument())
+
+    const release = api.holdNext('GET')
+    await user.click(within(screen.getByRole('group', { name: 'Filter by status' })).getByRole('button', { name: 'Open' }))
+
+    await waitFor(() => expect(progressBar()).toBeInTheDocument())
+    release()
+    await waitFor(() => expect(taskNames()).toEqual(['Pay rent']))
+    await waitFor(() => expect(progressBar()).not.toBeInTheDocument())
+  })
+})
+
 describe('filters', () => {
   beforeEach(() => {
     api.add('Buy milk', 'URGENT')

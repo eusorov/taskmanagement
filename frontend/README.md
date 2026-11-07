@@ -39,13 +39,23 @@ npm run api:fetch      # save openapi.json from localhost:8080 (or set OPENAPI_U
 npm run api:generate   # regenerate src/api/schema.d.ts
 ```
 
+## Data fetching
+
+- The filters, sort and page live in the URL (`?status=open&q=milk&page=2`), so a reload or a shared link shows the same list
+- TanStack Query caches each list by its filters; while the next page or filter result loads, the current one stays on screen
+- After every create, update or delete the list is fetched again, so it always shows what the server has
+- Updates send the `version` the task was loaded with; a `409` means someone else changed it, and the UI offers a reload
+- A progress bar at the top of the page shows while any request runs; it appears only after 300 ms, so quick requests don't flash it
+
 ## Layout
 
 - `src/api` — API client, error handling, generated types
 - `src/tasks` — the task list page and its components, URL filter mapping, query hooks
+- `src/feedback` — toast messages and the progress bar
+- `src/Layout.tsx` — wraps every page and shows the progress bar
 - `src/test` — test setup, an in-memory fake of the API, render helper
 
-Tests run in Vitest with Testing Library and use the fake API instead of a real backend.
+Tests run in Vitest with Testing Library and use the fake API instead of a real backend. `api.holdNext(method)` keeps a request waiting, to test what the page shows while it's in flight.
 
 ## design decisions
 - one page, with a dialog for editing
@@ -54,13 +64,13 @@ Tests run in Vitest with Testing Library and use the fake API instead of a real 
 - use nginx for serving react
 - use dockerfile and same docker compose as backend
 - add success toast messages for actions
+- one progress bar at the top of the page for every request
 
 ## out of scope
 - auth (login)
 - no JWT
 - no undo and no confirmation dialog for delete
 - no drag-and-drop reordering
-- spinners
 - live updates from other users (no websockets)
 - offline use (no local storage)
 - internationalization
