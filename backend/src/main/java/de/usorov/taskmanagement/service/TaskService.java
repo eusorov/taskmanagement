@@ -9,6 +9,7 @@ import de.usorov.taskmanagement.repository.TaskRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,17 +51,20 @@ public class TaskService {
 		return task;
 	}
 
+	/** A patch that changes nothing returns the task as it is, without a new version. */
 	@Transactional
 	public Task update(UUID id, int expectedVersion, TaskChanges changes) {
-		Task updated = taskRepository.update(id, expectedVersion, changes, now()).orElseThrow(() -> {
-			if (taskRepository.existsById(id)) {
-				log.info("Rejected update of task {}: version {} is stale", id, expectedVersion);
-				return new VersionConflictException(id, expectedVersion);
-			}
-			return new TaskNotFoundException(id);
-		});
-		log.info("Updated task {} to version {}", id, updated.version());
-		return updated;
+		Optional<Task> updated = taskRepository.update(id, expectedVersion, changes, now());
+		if (updated.isPresent()) {
+			log.info("Updated task {} to version {}", id, updated.get().version());
+			return updated.get();
+		}
+		Task current = taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
+		if (current.version() != expectedVersion) {
+			log.info("Rejected update of task {}: version {} is stale", id, expectedVersion);
+			throw new VersionConflictException(id, expectedVersion);
+		}
+		return current;
 	}
 
 	@Transactional

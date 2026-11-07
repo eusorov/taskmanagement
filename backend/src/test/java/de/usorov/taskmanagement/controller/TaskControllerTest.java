@@ -24,6 +24,8 @@ import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -179,6 +181,51 @@ class TaskControllerTest {
 				.andExpect(jsonPath("$.version").value(1))
 				.andExpect(jsonPath("$.createdAt").value("2026-01-01T10:00:00Z"))
 				.andExpect(jsonPath("$.updatedAt").value("2026-01-01T10:05:00Z"));
+	}
+
+	@ParameterizedTest
+	@ValueSource(
+			strings = {
+				"{\"version\":0}",
+				// Same values as the task already has
+				"{\"name\":\"Write\",\"priority\":\"LOW\",\"done\":false,\"version\":0}"
+			})
+	void patchThatChangesNothingKeepsVersionAndUpdatedAt(String json) throws Exception {
+		JsonNode task = create("{\"name\":\"Write\",\"priority\":\"LOW\"}");
+		clock.advance(Duration.ofMinutes(5));
+
+		mvc.perform(patch("/api/tasks/{id}", task.get("id").asText())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(json))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value("Write"))
+				.andExpect(jsonPath("$.version").value(0))
+				.andExpect(jsonPath("$.updatedAt").value("2026-01-01T10:00:00Z"));
+	}
+
+	@Test
+	void patchThatChangesOneOfSeveralFieldsBumpsVersion() throws Exception {
+		JsonNode task = create("{\"name\":\"Write\",\"priority\":\"LOW\"}");
+
+		mvc.perform(patch("/api/tasks/{id}", task.get("id").asText())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Write\",\"priority\":\"URGENT\",\"version\":0}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.priority").value("URGENT"))
+				.andExpect(jsonPath("$.version").value(1));
+	}
+
+	@Test
+	void patchThatChangesNothingStillChecksVersion() throws Exception {
+		JsonNode task = create("{\"name\":\"Write\"}");
+		String id = task.get("id").asText();
+		patchTask(id, "{\"name\":\"First\",\"version\":0}");
+
+		mvc.perform(patch("/api/tasks/{id}", id).contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+				.andExpect(status().isConflict());
+		mvc.perform(patch("/api/tasks/{id}", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+						.content("{\"version\":0}"))
+				.andExpect(status().isNotFound());
 	}
 
 	@Test

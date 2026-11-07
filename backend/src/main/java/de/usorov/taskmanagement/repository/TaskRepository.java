@@ -34,10 +34,6 @@ public class TaskRepository {
 		return dsl.selectFrom(TASKS).where(TASKS.ID.eq(id)).fetchOptional().map(TaskRepository::toTask);
 	}
 
-	public boolean existsById(UUID id) {
-		return dsl.fetchExists(TASKS, TASKS.ID.eq(id));
-	}
-
 	public int count() {
 		return dsl.fetchCount(TASKS);
 	}
@@ -68,24 +64,31 @@ public class TaskRepository {
 	}
 
 	/**
-	 * Applies {@code changes} in a single statement if the task still has {@code expectedVersion}.
+	 * Applies {@code changes} in a single statement if the task still has {@code expectedVersion} and at least one
+	 * field gets a new value.
 	 *
-	 * @return the updated task, or empty if the task is missing or its version differs
+	 * @return the updated task, or empty if the task is missing, its version differs, or nothing would change
 	 */
 	public Optional<Task> update(UUID id, int expectedVersion, TaskChanges changes, Instant now) {
 		UpdateSetMoreStep<TasksRecord> update = dsl.update(TASKS)
 				.set(TASKS.UPDATED_AT, now)
 				.set(TASKS.VERSION, TASKS.VERSION.plus(1));
+		// Without a field that differs, the row is left alone, so version and updatedAt stay as they are
+		Condition changesSomething = DSL.falseCondition();
 		if (changes.name() != null) {
 			update = update.set(TASKS.NAME, changes.name());
+			changesSomething = changesSomething.or(TASKS.NAME.isDistinctFrom(changes.name()));
 		}
 		if (changes.priority() != null) {
-			update = update.set(TASKS.PRIORITY, toTaskPriority(changes.priority()));
+			TaskPriority priority = toTaskPriority(changes.priority());
+			update = update.set(TASKS.PRIORITY, priority);
+			changesSomething = changesSomething.or(TASKS.PRIORITY.isDistinctFrom(priority));
 		}
 		if (changes.done() != null) {
 			update = update.set(TASKS.DONE, changes.done());
+			changesSomething = changesSomething.or(TASKS.DONE.isDistinctFrom(changes.done()));
 		}
-		return update.where(TASKS.ID.eq(id).and(TASKS.VERSION.eq(expectedVersion)))
+		return update.where(TASKS.ID.eq(id).and(TASKS.VERSION.eq(expectedVersion)).and(changesSomething))
 				.returning()
 				.fetchOptional()
 				.map(TaskRepository::toTask);
