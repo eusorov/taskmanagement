@@ -8,14 +8,15 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 ## Requirements
 
 - JDK 17+
-- Docker (Testcontainers starts Postgres for tests, local runs and jOOQ codegen)
+- Docker (Postgres for local runs, tests and jOOQ codegen)
 
 ## Common tasks
 
 | Task                                  | Command |
 |---------------------------------------|---------------|
 | Run tests                             | `./mvnw test` |
-| Run locally with a throwaway Postgres | `./mvnw spring-boot:test-run` (prod settings; add `-Dspring-boot.run.profiles=dev` for demo tasks)|
+| Run locally                           | `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` (starts Postgres from `compose.dev.yaml`, data kept across restarts, demo tasks in an empty database) |
+| Delete the local dev database         | `docker compose -f compose.dev.yaml down -v` |
 | Generate jOOQ sources                 | `./mvnw -Pjooq-codegen generate-sources`|
 | run docker in dev mode                | SPRING_PROFILES_ACTIVE=dev docker compose up -d|
 

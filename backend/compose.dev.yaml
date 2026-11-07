@@ -1,0 +1,20 @@
+# Postgres for local development, started by Spring Boot on `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`
+# (spring-boot-docker-compose). Data stays in the volume across restarts; `docker compose -f compose.dev.yaml down -v`
+# deletes it.
+name: taskmanagement-dev
+
+services:
+  postgres:
+    image: postgres:17.11
+    environment:
+      POSTGRES_DB: taskmanagement
+      POSTGRES_USER: taskmanagement
+      POSTGRES_PASSWORD: dev
+    # A random free host port, so an installed Postgres on 5432 doesn't clash; Spring Boot finds the port itself
+    ports:
+      - "5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

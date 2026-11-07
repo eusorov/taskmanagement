@@ -13,6 +13,10 @@ spring:
     deserialization:
       # Reject {"version": 0.7} instead of silently truncating it to 0
       accept-float-as-int: false
+  # Only the dev profile starts compose.dev.yaml; elsewhere the datasource is configured
+  docker:
+    compose:
+      enabled: false
   jooq:
     sql-dialect: postgres
   liquibase:

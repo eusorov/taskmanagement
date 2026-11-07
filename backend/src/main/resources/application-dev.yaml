@@ -1,4 +1,11 @@
-# Local development: ./mvnw spring-boot:test-run -Dspring-boot.run.profiles=dev
+# Local development: ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev starts Postgres from compose.dev.yaml and
+# connects to it. spring-boot:test-run with this profile uses that database too, not its throwaway one
+spring:
+  docker:
+    compose:
+      enabled: true
+      file: compose.dev.yaml
+
 app:
   demo-tasks:
     enabled: true
