@@ -212,9 +212,12 @@ describe('changing a task', () => {
     expect(row).toHaveAttribute('aria-busy', 'true')
     expect(within(row).getByRole('checkbox', { name: 'Done: Pay rent' })).toBeDisabled()
     expect(within(row).getByRole('button', { name: 'Delete Pay rent' })).toBeDisabled()
+    // The dialog would start from the version being replaced, so saving it could only conflict
+    expect(within(row).getByRole('button', { name: 'Edit Pay rent' })).toBeDisabled()
     release()
     await waitFor(() => expect(screen.getByRole('listitem')).toHaveAttribute('aria-busy', 'false'))
     expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Edit Pay rent' })).toBeEnabled()
   })
 
   it('keeps a task locked while it saves, even after another task is clicked', async () => {

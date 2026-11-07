@@ -4,7 +4,10 @@ import { PRIORITY_LABEL } from './priorityLabel'
 
 interface TaskRowProps {
   task: Task
-  /** Being marked done or deleted, until the list is reloaded; a click before that would send a stale version */
+  /**
+   * Being changed or deleted, until the list is reloaded; a click before that would send a stale version, and an edit
+   * dialog opened then would start from it
+   */
   saving: boolean
   onToggleDone: (task: Task) => void
   onEdit: (task: Task) => void
@@ -33,8 +36,9 @@ export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRo
         <button
           type="button"
           onClick={() => onEdit(task)}
+          disabled={saving}
           aria-label={`Edit ${task.name}`}
-          className="rounded px-2 py-1 text-blue-pencil hover:underline"
+          className="rounded px-2 py-1 text-blue-pencil hover:underline disabled:opacity-40 disabled:no-underline"
         >
           Edit
         </button>
