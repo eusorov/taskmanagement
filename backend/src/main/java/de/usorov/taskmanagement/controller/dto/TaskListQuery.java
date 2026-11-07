@@ -14,15 +14,14 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Query parameters of {@code GET /api/tasks}. Without {@code sort} tasks are ordered by priority desc, then createdAt
- * desc; {@code order} defaults to asc for {@code name} and desc otherwise. Open tasks come before done ones unless
- * {@code groupDone=false}.
+ * Query parameters of {@code GET /api/tasks}. {@code sort} defaults to {@code priority}; {@code order} defaults to asc
+ * for {@code name} and desc otherwise. Open tasks come before done ones unless {@code groupDone=false}.
  */
 public record TaskListQuery(
 		Boolean done,
 		List<Priority> priority,
 		@Size(max = 500) @NoNulCharacters String q,
-		@Schema(allowableValues = {"priority", "createdAt", "updatedAt", "name"})
+		@Schema(allowableValues = {"priority", "createdAt", "updatedAt", "name"}, defaultValue = DEFAULT_SORT)
 				@Pattern(regexp = "priority|createdAt|updatedAt|name")
 				String sort,
 		@Schema(allowableValues = {"asc", "desc"}) @Pattern(regexp = "asc|desc") String order,
@@ -30,10 +29,11 @@ public record TaskListQuery(
 		@Min(0) Integer page,
 		@Min(1) @Max(200) Integer size) {
 
+	static final String DEFAULT_SORT = "priority";
 	static final int DEFAULT_SIZE = 50;
 
 	public TaskSearch toSearch() {
-		TaskSortField sortField = sort == null ? null : switch (sort) {
+		TaskSortField sortField = switch (sort == null ? DEFAULT_SORT : sort) {
 			case "priority" -> TaskSortField.PRIORITY;
 			case "createdAt" -> TaskSortField.CREATED_AT;
 			case "updatedAt" -> TaskSortField.UPDATED_AT;

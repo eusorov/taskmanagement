@@ -8,6 +8,7 @@ import de.usorov.taskmanagement.model.Priority;
 import de.usorov.taskmanagement.model.Task;
 import de.usorov.taskmanagement.model.TaskChanges;
 import de.usorov.taskmanagement.model.TaskSearch;
+import de.usorov.taskmanagement.model.TaskSortField;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,11 +116,10 @@ public class TaskRepository {
 		if (search.groupDone()) {
 			order.add(TASKS.DONE.asc());
 		}
-		if (search.sortField() == null) {
-			order.add(TASKS.PRIORITY.desc());
+		order.add(columnFor(search).sort(search.ascending() ? SortOrder.ASC : SortOrder.DESC));
+		if (search.sortField() == TaskSortField.PRIORITY) {
+			// Newest first within a priority, whichever way the priorities run
 			order.add(TASKS.CREATED_AT.desc());
-		} else {
-			order.add(columnFor(search).sort(search.ascending() ? SortOrder.ASC : SortOrder.DESC));
 		}
 		// Stable order across pages
 		order.add(TASKS.ID.asc());

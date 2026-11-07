@@ -222,6 +222,13 @@ class TaskControllerTest {
 		mvc.perform(get("/api/tasks").param("page", "1").param("size", "3"))
 				.andExpect(jsonPath("$.items[*].name").value(contains("urgent done")))
 				.andExpect(jsonPath("$.total").value(4));
+
+		// Same as the default
+		mvc.perform(get("/api/tasks").param("sort", "priority"))
+				.andExpect(jsonPath("$.items[*].name").value(contains("urgent", "normal new", "normal old", "urgent done")));
+		// Lowest priority first, still newest first within a priority
+		mvc.perform(get("/api/tasks").param("order", "asc"))
+				.andExpect(jsonPath("$.items[*].name").value(contains("normal new", "normal old", "urgent", "urgent done")));
 	}
 
 	@Test

@@ -69,7 +69,7 @@ class TaskControllerWebMvcTest {
 				.andExpect(jsonPath("$.size").value(50))
 				.andExpect(jsonPath("$.total").value(1));
 
-		verify(taskService).find(new TaskSearch(null, EnumSet.noneOf(Priority.class), null, null, false, true, 0, 50));
+		verify(taskService).find(new TaskSearch(null, EnumSet.noneOf(Priority.class), null, TaskSortField.PRIORITY, false, true, 0, 50));
 	}
 
 	@Test
@@ -107,7 +107,7 @@ class TaskControllerWebMvcTest {
 		mvc.perform(get("/api/tasks").param("priority", priority)).andExpect(status().isOk());
 
 		verify(taskService)
-				.find(new TaskSearch(null, EnumSet.of(Priority.URGENT), null, null, false, true, 0, 50));
+				.find(new TaskSearch(null, EnumSet.of(Priority.URGENT), null, TaskSortField.PRIORITY, false, true, 0, 50));
 	}
 
 	@ParameterizedTest
@@ -118,7 +118,18 @@ class TaskControllerWebMvcTest {
 		mvc.perform(get("/api/tasks").param("priority", priority)).andExpect(status().isOk());
 
 		verify(taskService)
-				.find(new TaskSearch(null, EnumSet.noneOf(Priority.class), null, null, false, true, 0, 50));
+				.find(new TaskSearch(null, EnumSet.noneOf(Priority.class), null, TaskSortField.PRIORITY, false, true, 0, 50));
+	}
+
+	@Test
+	void listAppliesOrderToTheDefaultSort() throws Exception {
+		when(taskService.find(any())).thenReturn(new TaskPage(List.of(), 0, 50, 0));
+
+		mvc.perform(get("/api/tasks").param("order", "asc")).andExpect(status().isOk());
+
+		verify(taskService)
+				.find(new TaskSearch(
+						null, EnumSet.noneOf(Priority.class), null, TaskSortField.PRIORITY, true, true, 0, 50));
 	}
 
 	@Test
