@@ -330,6 +330,24 @@ class TaskControllerWebMvcTest {
 		verifyNoInteractions(taskService);
 	}
 
+	@ParameterizedTest
+	@ValueSource(
+			strings = {
+				"{\"done\":\"true\",\"version\":0}",
+				"{\"done\":\"false\",\"version\":0}",
+				"{\"done\":\"1\",\"version\":0}",
+				"{\"done\":1,\"version\":0}",
+				"{\"done\":true,\"version\":\"0\"}",
+				"{\"done\":true,\"version\":\"\"}"
+			})
+	void patchRejectsBooleansAndNumbersSentAsOtherTypesWithoutCallingService(String body) throws Exception {
+		mvc.perform(patch("/api/tasks/{id}", ID).contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+
+		verifyNoInteractions(taskService);
+	}
+
 	@Test
 	void patchMapsVersionConflictTo409() throws Exception {
 		when(taskService.update(eq(ID), eq(2), any())).thenThrow(new VersionConflictException(ID, 2));

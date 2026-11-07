@@ -7,6 +7,9 @@ spring:
       pool-name: taskmanagement
       maximum-pool-size: 10
   jackson:
+    mapper:
+      # Reject {"done": "true"} and {"version": "0"}: booleans and numbers must be JSON booleans and numbers
+      allow-coercion-of-scalars: false
     deserialization:
       # Reject {"version": 0.7} instead of silently truncating it to 0
       accept-float-as-int: false
