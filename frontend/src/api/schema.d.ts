@@ -42,8 +42,13 @@ export interface components {
     schemas: {
         CreateTaskRequest: {
             name: string;
-            /** @enum {string} */
+            /**
+             * @default NORMAL
+             * @enum {string}
+             */
             priority?: "LOW" | "NORMAL" | "URGENT";
+            /** @default false */
+            done?: boolean;
         };
         /** @description RFC 7807 problem details */
         Problem: {

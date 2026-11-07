@@ -2,6 +2,7 @@ package de.usorov.taskmanagement.controller;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -186,7 +187,7 @@ class TaskControllerWebMvcTest {
 
 	@Test
 	void createPassesNameAndPriorityAndReturnsLocation() throws Exception {
-		when(taskService.create("Buy milk", Priority.URGENT)).thenReturn(TASK);
+		when(taskService.create("Buy milk", Priority.URGENT, false)).thenReturn(TASK);
 
 		mvc.perform(post("/api/tasks")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -197,13 +198,35 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
-	void createPassesMissingPriorityAsNull() throws Exception {
-		when(taskService.create("Buy milk", null)).thenReturn(TASK);
+	void createPassesDone() throws Exception {
+		when(taskService.create("Buy milk", Priority.NORMAL, true)).thenReturn(TASK);
+
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Buy milk\",\"done\":true}"))
+				.andExpect(status().isCreated());
+
+		verify(taskService).create("Buy milk", Priority.NORMAL, true);
+	}
+
+	@Test
+	void createRejectsDoneSentAsString() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Buy milk\",\"done\":\"true\"}"))
+				.andExpect(status().isBadRequest());
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void createDefaultsMissingPriorityAndDone() throws Exception {
+		when(taskService.create("Buy milk", Priority.NORMAL, false)).thenReturn(TASK);
 
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Buy milk\"}"))
 				.andExpect(status().isCreated());
 
-		verify(taskService).create("Buy milk", null);
+		verify(taskService).create("Buy milk", Priority.NORMAL, false);
 	}
 
 	@Test
@@ -240,27 +263,27 @@ class TaskControllerWebMvcTest {
 
 	@Test
 	void createPassesTrimmedNameToService() throws Exception {
-		when(taskService.create("Buy milk", null)).thenReturn(TASK);
+		when(taskService.create("Buy milk", Priority.NORMAL, false)).thenReturn(TASK);
 
 		mvc.perform(post("/api/tasks")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"name\":\"\\u00a0 Buy milk \\u200b\"}"))
 				.andExpect(status().isCreated());
 
-		verify(taskService).create("Buy milk", null);
+		verify(taskService).create("Buy milk", Priority.NORMAL, false);
 	}
 
 	@Test
 	void createChecksLengthAfterTrimming() throws Exception {
 		String name = "x".repeat(500);
-		when(taskService.create(name, null)).thenReturn(TASK);
+		when(taskService.create(name, Priority.NORMAL, false)).thenReturn(TASK);
 
 		mvc.perform(post("/api/tasks")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"name\":\"   " + name + "   \"}"))
 				.andExpect(status().isCreated());
 
-		verify(taskService).create(name, null);
+		verify(taskService).create(name, Priority.NORMAL, false);
 	}
 
 	@Test
@@ -286,7 +309,7 @@ class TaskControllerWebMvcTest {
 
 	@Test
 	void createMapsTaskLimitTo409() throws Exception {
-		when(taskService.create(any(), any())).thenThrow(new TaskLimitReachedException(10_000));
+		when(taskService.create(any(), any(), anyBoolean())).thenThrow(new TaskLimitReachedException(10_000));
 
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"one more\"}"))
 				.andExpect(status().isConflict())
@@ -407,7 +430,7 @@ class TaskControllerWebMvcTest {
 
 	@Test
 	void nameMayContainTabsAndNewlines() throws Exception {
-		when(taskService.create("a\tb\nc", null)).thenReturn(TASK);
+		when(taskService.create("a\tb\nc", Priority.NORMAL, false)).thenReturn(TASK);
 
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"a\\tb\\nc\"}"))
 				.andExpect(status().isCreated());

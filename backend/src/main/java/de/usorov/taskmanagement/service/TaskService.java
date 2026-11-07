@@ -38,14 +38,13 @@ public class TaskService {
 	}
 
 	@Transactional
-	public Task create(String name, Priority priority) {
+	public Task create(String name, Priority priority, boolean done) {
 		if (taskRepository.count() >= TASK_LIMIT) {
 			log.warn("Task limit of {} reached, rejecting new task", TASK_LIMIT);
 			throw new TaskLimitReachedException(TASK_LIMIT);
 		}
 		Instant now = now();
-		Task task = new Task(
-				UUID.randomUUID(), name, priority == null ? Priority.NORMAL : priority, false, now, now, 0);
+		Task task = new Task(UUID.randomUUID(), name, priority, done, now, now, 0);
 		taskRepository.insert(task);
 		log.info("Created task {} with priority {}", task.id(), task.priority());
 		return task;

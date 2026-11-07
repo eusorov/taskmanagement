@@ -64,7 +64,7 @@ public class TaskController {
 			description = "Task limit reached",
 			content = @Content(mediaType = PROBLEM_JSON, schema = @Schema(implementation = ApiProblem.class)))
 	public ResponseEntity<TaskResponse> create(@Valid @RequestBody CreateTaskRequest request) {
-		Task task = taskService.create(request.name(), request.priority());
+		Task task = taskService.create(request.name(), request.priority(), request.done());
 		var location = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
 				.buildAndExpand(task.id())

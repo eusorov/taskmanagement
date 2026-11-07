@@ -370,11 +370,16 @@
           },
           "priority": {
             "type": "string",
+            "default": "NORMAL",
             "enum": [
               "LOW",
               "NORMAL",
               "URGENT"
             ]
+          },
+          "done": {
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [

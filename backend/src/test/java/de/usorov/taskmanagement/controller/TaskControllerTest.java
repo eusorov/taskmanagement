@@ -96,6 +96,19 @@ class TaskControllerTest {
 	}
 
 	@Test
+	void createCanAddATaskThatIsAlreadyDone() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"Already handled\",\"done\":true}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.done").value(true));
+		create("{\"name\":\"Still open\",\"done\":false}");
+
+		mvc.perform(get("/api/tasks").param("done", "true"))
+				.andExpect(jsonPath("$.items[*].name").value(contains("Already handled")));
+	}
+
+	@Test
 	void createRejectsBlankName() throws Exception {
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"   \"}"))
 				.andExpect(status().isBadRequest())
