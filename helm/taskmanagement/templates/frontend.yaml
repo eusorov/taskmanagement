@@ -1,0 +1,74 @@
+{{- $name := printf "%s-frontend" (include "taskmanagement.fullname" .) -}}
+# nginx serves the app and forwards /api to the backend, so the browser talks to a single origin
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "taskmanagement.labels" . | nindent 4 }}
+    {{- include "taskmanagement.selectorLabels" (list . "frontend") | nindent 4 }}
+spec:
+  selector:
+    {{- include "taskmanagement.selectorLabels" (list . "frontend") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "taskmanagement.labels" . | nindent 4 }}
+    {{- include "taskmanagement.selectorLabels" (list . "frontend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "taskmanagement.selectorLabels" (list . "frontend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "taskmanagement.labels" . | nindent 8 }}
+        {{- include "taskmanagement.selectorLabels" (list . "frontend") | nindent 8 }}
+    spec:
+      {{- include "taskmanagement.podDefaults" . | nindent 6 }}
+      # The nginx user of nginx-unprivileged
+      {{- include "taskmanagement.podSecurityContext" 101 | nindent 6 }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          env:
+            # nginx's resolver ignores the namespace search domain, so the name must be fully qualified
+            - name: BACKEND_HOST
+              value: {{ include "taskmanagement.fullname" . }}-backend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- include "taskmanagement.containerSecurityContext" . | nindent 10 }}
+          volumeMounts:
+            # The entrypoint renders nginx.conf.template here at start
+            - name: conf
+              mountPath: /etc/nginx/conf.d
+            # PID file and nginx's temp files
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: conf
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

@@ -18,6 +18,9 @@ Thumbs.db
 .springBeans
 .sts4-cache
 
+### Helm: downloaded dependencies (Chart.lock records their versions) ###
+helm/taskmanagement/charts/
+
 ### Secrets and local config (only the examples are committed) ###
 .env
 

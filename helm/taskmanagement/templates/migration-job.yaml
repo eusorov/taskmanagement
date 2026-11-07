@@ -1,0 +1,63 @@
+{{- /*
+Applies the Liquibase migrations once per release, so backend replicas never run them concurrently.
+- post-install: on the first install Postgres only exists after the release's resources are created. The backend
+  starts without the schema meanwhile, and its API answers 500 until this Job is done (seconds; nobody uses a fresh
+  install yet)
+- pre-upgrade: on upgrades the schema is migrated while the old pods still run, so migrations must stay compatible
+  with the previous version, as in any rolling update
+The backend image runs without a web server: Spring Boot starts, Liquibase migrates, and the process exits.
+*/ -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "taskmanagement.fullname" . }}-migration
+  labels:
+    {{- include "taskmanagement.labels" . | nindent 4 }}
+    {{- include "taskmanagement.selectorLabels" (list . "migration") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,pre-upgrade
+    # A failed Job is kept for its logs until the next install or upgrade replaces it
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        {{- include "taskmanagement.labels" . | nindent 8 }}
+        {{- include "taskmanagement.selectorLabels" (list . "migration") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      {{- include "taskmanagement.podDefaults" . | nindent 6 }}
+      {{- include "taskmanagement.podSecurityContext" 10001 | nindent 6 }}
+      initContainers:
+        # Without `helm install --wait`, this Job can start before Postgres accepts connections
+        - name: wait-for-postgres
+          image: "{{ .Values.postgresql.image.registry | default "docker.io" }}/{{ .Values.postgresql.image.repository | default "bitnami/postgresql" }}@{{ .Values.postgresql.image.digest }}"
+          command:
+            - sh
+            - -c
+            - until pg_isready -h {{ include "taskmanagement.postgresql.fullname" . }} -p 5432 -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }}; do sleep 2; done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          {{- include "taskmanagement.containerSecurityContext" . | nindent 10 }}
+      containers:
+        - name: migration
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          args: ["--spring.main.web-application-type=none"]
+          env:
+            {{- include "taskmanagement.datasourceEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.migration.resources | nindent 12 }}
+          {{- include "taskmanagement.containerSecurityContext" . | nindent 10 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

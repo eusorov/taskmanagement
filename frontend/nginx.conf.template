@@ -5,9 +5,11 @@ server {
     gzip on;
     gzip_types text/css application/javascript application/json image/svg+xml;
 
-    # Docker's DNS, re-resolved every few seconds so scaled or restarted backends are found
-    resolver 127.0.0.11 valid=5s ipv6=off;
-    set $backend http://backend:8080;
+    # Filled in at container start (see Dockerfile): the nameservers from /etc/resolv.conf (Docker's DNS, or
+    # kube-dns in Kubernetes), re-resolved every few seconds so scaled or restarted backends are found
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=5s ipv6=off;
+    # nginx's resolver ignores resolv.conf search domains, so Kubernetes needs the fully qualified service name
+    set $backend http://${BACKEND_HOST}:8080;
 
     location /api/ {
         proxy_pass $backend;

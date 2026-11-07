@@ -188,7 +188,7 @@ class TaskControllerIT {
 		assertThat(task.get("version").asInt()).isEqualTo(1);
 	}
 
-	// The headers nginx sends (frontend/nginx.conf): the browser's Host with its port, and the scheme it used
+	// The headers nginx sends (frontend/nginx.conf.template): the browser's Host with its port, and the scheme it used
 	@Test
 	void locationUsesTheAddressTheBrowserCalled() {
 		ResponseEntity<JsonNode> overHttp = postVia("http", "tasks.example:8081");

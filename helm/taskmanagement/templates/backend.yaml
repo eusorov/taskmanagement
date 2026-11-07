@@ -1,0 +1,83 @@
+{{- $name := printf "%s-backend" (include "taskmanagement.fullname" .) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "taskmanagement.labels" . | nindent 4 }}
+    {{- include "taskmanagement.selectorLabels" (list . "backend") | nindent 4 }}
+spec:
+  selector:
+    {{- include "taskmanagement.selectorLabels" (list . "backend") | nindent 4 }}
+  # Only the API; Actuator (9000) is used by the kubelet's probes and never exposed through a Service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "taskmanagement.labels" . | nindent 4 }}
+    {{- include "taskmanagement.selectorLabels" (list . "backend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "taskmanagement.selectorLabels" (list . "backend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "taskmanagement.labels" . | nindent 8 }}
+        {{- include "taskmanagement.selectorLabels" (list . "backend") | nindent 8 }}
+    spec:
+      {{- include "taskmanagement.podDefaults" . | nindent 6 }}
+      # Matches the numeric USER in backend/Dockerfile
+      {{- include "taskmanagement.podSecurityContext" 10001 | nindent 6 }}
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          env:
+            {{- include "taskmanagement.datasourceEnv" . | nindent 12 }}
+            # The migration Job applies the schema; replicas starting together would otherwise race to create
+            # Liquibase's own tables on an empty database
+            - name: SPRING_LIQUIBASE_ENABLED
+              value: "false"
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9000
+          # Allows up to 5 minutes for startup before liveness checks begin
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
+            periodSeconds: 10
+            timeoutSeconds: 3
+          # Includes the database, so a pod without a connection gets no traffic
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: management
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- include "taskmanagement.containerSecurityContext" . | nindent 10 }}
+          volumeMounts:
+            # Tomcat's work directory
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

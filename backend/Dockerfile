@@ -11,13 +11,16 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -q package -DskipTests \
 
 # Run: one layer per Spring Boot jar layer, so code changes don't re-ship dependencies
 FROM eclipse-temurin:17.0.21_9-jre-noble
-RUN groupadd --system app && useradd --system --gid app --no-create-home app
+# Fixed numeric IDs: Kubernetes' runAsNonRoot can only verify a numeric USER, and volume permissions stay stable
+RUN groupadd --system --gid 10001 app \
+    && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 WORKDIR /app
 COPY --from=build /build/extracted/dependencies/ ./
 COPY --from=build /build/extracted/spring-boot-loader/ ./
 COPY --from=build /build/extracted/snapshot-dependencies/ ./
 COPY --from=build /build/extracted/application/ ./
-USER app
+# Files above stay owned by root, so the app can read but not change its own code
+USER 10001:10001
 # 8080: API, 9000: Actuator (internal only)
 EXPOSE 8080 9000
 # Heap sized from the container memory limit; set here, not via JAVA_TOOL_OPTIONS, which prints a non-JSON line

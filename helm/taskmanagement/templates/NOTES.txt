@@ -1,0 +1,5 @@
+Open the app:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "taskmanagement.fullname" . }}-frontend 8080:8080
+
+then http://localhost:8080

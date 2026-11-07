@@ -1,0 +1,13 @@
+apiVersion: v2
+name: taskmanagement
+description: Task manager - Spring Boot API, React frontend served by nginx, and PostgreSQL (Bitnami chart)
+type: application
+# Chart version: bump on every change to the chart itself
+version: 0.1.0
+# The backend's version (backend/pom.xml)
+appVersion: "0.0.1-SNAPSHOT"
+dependencies:
+  # Run `helm dependency update helm/taskmanagement` after changing this
+  - name: postgresql
+    version: 18.12.18
+    repository: oci://registry-1.docker.io/bitnamicharts

@@ -31,7 +31,7 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 - The API is documented with OpenAPI, from which the frontend's typed client is generated.
 - Hikari's connection pool is capped at 10 connections per instance (`application.yaml`).
 - Actuator health, info and metrics run on a separate port (9000) that is never published.
-- Deployment is a Dockerfile plus Docker Compose; no Kubernetes.
+- Deployment is a Dockerfile plus Docker Compose, or the Helm chart in `helm/taskmanagement`. The image runs as a fixed non-root UID (10001), so Kubernetes' `runAsNonRoot` can verify it. In Kubernetes, migrations run in a separate Job; the backend pods start with `SPRING_LIQUIBASE_ENABLED=false`.
 - Lombok for constructors and loggers.
 - Tests: `@WebMvcTest` for the controller, integration tests against a real Postgres (Testcontainers) for the rest.
 - The `dev` profile adds 20 demo tasks on startup when the database is empty.
@@ -40,7 +40,6 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 
 - Authentication and authorization
 - Caching
-- Kubernetes deployment
 - Tracing
 - API versioning
 - Native image

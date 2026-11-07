@@ -62,6 +62,7 @@ Tests run in Vitest with Testing Library and use the fake API instead of a real 
 - api client generated from openapi spec
 - use problem detail
 - use nginx for serving react
+- the nginx config is a template (`nginx.conf.template`), so the same image works in Docker Compose and Kubernetes.
 - use dockerfile and same docker compose as backend
 - add success toast messages for actions
 - one progress bar at the top of the page for every request
