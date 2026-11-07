@@ -23,7 +23,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
   // Follow the URL when it changes elsewhere, e.g. "Clear filters"
   if (filters.query !== urlQuery) {
     setUrlQuery(filters.query)
-    setQuery(filters.query)
+    if (query.trim() !== filters.query) setQuery(filters.query)
   }
 
   // Search after a short pause in typing, not on every keystroke

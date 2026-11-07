@@ -571,6 +571,19 @@ describe('filters', () => {
     expect(screen.getByText('2 tasks match')).toBeInTheDocument()
   })
 
+  it('keeps a space typed just before the search runs', async () => {
+    const { user, router } = renderApp()
+    await screen.findByText('Call mom')
+    const search = screen.getByRole('searchbox', { name: 'Search tasks' })
+
+    await user.type(search, 'buy ')
+    await waitFor(() => expect(router.state.location.search).toBe('?q=buy'))
+    await user.type(search, 'milk')
+
+    expect(search).toHaveValue('buy milk')
+    await waitFor(() => expect(taskNames()).toEqual(['Buy milk']))
+  })
+
   it('announces how many tasks a search finds', async () => {
     const { user } = renderApp()
     await screen.findByText('Call mom')
