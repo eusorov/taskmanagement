@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_FILTERS, isFiltered, PAGE_SIZE, parseFilters, serializeFilters, toListQuery } from './filters'
+import {
+  DEFAULT_FILTERS,
+  isFiltered,
+  limitQuery,
+  MAX_QUERY_LENGTH,
+  PAGE_SIZE,
+  parseFilters,
+  serializeFilters,
+  toListQuery,
+} from './filters'
+
+describe('limitQuery', () => {
+  it('keeps search texts up to the limit', () => {
+    expect(limitQuery('milk')).toBe('milk')
+    expect(limitQuery('x'.repeat(MAX_QUERY_LENGTH))).toBe('x'.repeat(MAX_QUERY_LENGTH))
+  })
+
+  it('cuts longer ones to the limit', () => {
+    expect(limitQuery('x'.repeat(MAX_QUERY_LENGTH + 1))).toBe('x'.repeat(MAX_QUERY_LENGTH))
+  })
+
+  it('never cuts an emoji in half', () => {
+    // The emoji would take units 500 and 501
+    expect(limitQuery('x'.repeat(MAX_QUERY_LENGTH - 1) + '😀')).toBe('x'.repeat(MAX_QUERY_LENGTH - 1))
+    expect(limitQuery('x'.repeat(MAX_QUERY_LENGTH - 2) + '😀😀')).toBe('x'.repeat(MAX_QUERY_LENGTH - 2) + '😀')
+  })
+})
 
 describe('parseFilters', () => {
   it('uses defaults for an empty URL', () => {
@@ -25,6 +51,11 @@ describe('parseFilters', () => {
     expect(parseFilters(new URLSearchParams('page=abc')).page).toBe(0)
     expect(parseFilters(new URLSearchParams('sort=owner')).sort).toBe('priority')
     expect(parseFilters(new URLSearchParams('sort=toString')).sort).toBe('priority')
+  })
+
+  it('cuts a search from the URL that the API would reject as too long', () => {
+    const q = 'x'.repeat(MAX_QUERY_LENGTH + 10)
+    expect(parseFilters(new URLSearchParams({ q })).query).toBe('x'.repeat(MAX_QUERY_LENGTH))
   })
 })
 

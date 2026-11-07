@@ -3,6 +3,17 @@ import type { paths } from '../api/schema'
 
 export const PAGE_SIZE = 20
 
+/** Longest search text the API takes, counted like its check: in UTF-16 units, so an emoji is two. */
+export const MAX_QUERY_LENGTH = 500
+
+/** Cuts a search text to MAX_QUERY_LENGTH, so a long paste searches instead of being rejected. */
+export function limitQuery(query: string): string {
+  if (query.length <= MAX_QUERY_LENGTH) return query
+  // Never keep the first half of an emoji alone: the request couldn't encode it
+  const splitsPair = /[\uD800-\uDBFF]/.test(query[MAX_QUERY_LENGTH - 1])
+  return query.slice(0, splitsPair ? MAX_QUERY_LENGTH - 1 : MAX_QUERY_LENGTH)
+}
+
 export type Status = 'all' | 'open' | 'done'
 
 type ListQuery = NonNullable<paths['/api/tasks']['get']['parameters']['query']>
@@ -45,7 +56,7 @@ export function parseFilters(params: URLSearchParams): TaskFilters {
     priorities: (params.get('priority') ?? '')
       .split(',')
       .filter((p): p is Priority => (PRIORITIES as string[]).includes(p)),
-    query: params.get('q')?.trim() ?? '',
+    query: limitQuery(params.get('q')?.trim() ?? ''),
     sort: sort !== null && Object.hasOwn(SORT_OPTIONS, sort) ? (sort as SortOption) : 'priority',
     page: Number.isInteger(page) && page > 0 ? page : 0,
   }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PRIORITIES, type Priority } from '../api/client'
-import { SORT_OPTIONS, type SortOption, type Status, type TaskFilters } from './filters'
+import { limitQuery, SORT_OPTIONS, type SortOption, type Status, type TaskFilters } from './filters'
 import { PriorityStroke } from './priority'
 import { PRIORITY_LABEL } from './priorityLabel'
 
@@ -45,7 +45,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
       <input
         type="search"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => setQuery(limitQuery(event.target.value))}
         aria-label="Search tasks"
         placeholder="Search"
         className="w-full rounded-md border border-rule bg-white px-3 py-1.5 sm:w-56"
