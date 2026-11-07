@@ -158,6 +158,65 @@ describe('changing a task', () => {
     expect(await screen.findByText('Pay rent today')).toBeInTheDocument()
   })
 
+  it('offers a reload when the task was deleted elsewhere while editing', async () => {
+    const task = api.add('Pay rent')
+    api.add('Water plants')
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Pay rent' }))
+    api.tasks.splice(api.tasks.indexOf(task), 1)
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Someone else deleted this task while you were editing')
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    await user.click(within(alert).getByRole('button', { name: 'Reload list' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(taskNames()).toEqual(['Water plants']))
+  })
+
+  it('takes the next click on a task only once the list has its new version', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+
+    const releaseReload = api.holdNext('GET')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+    await waitFor(() => expect(api.requests.filter((r) => r.method === 'PATCH')).toHaveLength(1))
+    // Saved, but the list still holds version 0: a click now would be rejected as a conflict
+    expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeDisabled()
+
+    releaseReload()
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeEnabled())
+    expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeChecked()
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    expect(await screen.findByText('Reopened “Pay rent”')).toBeInTheDocument()
+    expect(api.requests.filter((r) => r.method === 'PATCH').map((r) => r.body)).toEqual([
+      { done: true, version: 0 },
+      { done: false, version: 1 },
+    ])
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('takes no second click on a task while its change is saved', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+
+    const release = api.holdNext('PATCH')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    const row = screen.getByRole('listitem')
+    expect(row).toHaveAttribute('aria-busy', 'true')
+    expect(within(row).getByRole('checkbox', { name: 'Done: Pay rent' })).toBeDisabled()
+    expect(within(row).getByRole('button', { name: 'Delete Pay rent' })).toBeDisabled()
+    release()
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveAttribute('aria-busy', 'false'))
+    expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeEnabled()
+  })
+
   it('offers a reload when a done toggle hits a stale version', async () => {
     const task = api.add('Pay rent')
     const { user } = renderApp()

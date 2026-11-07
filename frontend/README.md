@@ -44,7 +44,7 @@ npm run api:generate   # regenerate src/api/schema.d.ts
 - The filters, sort and page live in the URL (`?status=open&q=milk&page=2`), so a reload or a shared link shows the same list
 - TanStack Query caches each list by its filters; while the next page or filter result loads, the current one stays on screen
 - After every create, update or delete the list is fetched again, so it always shows what the server has
-- Updates send the `version` the task was loaded with; a `409` means someone else changed it, and the UI offers a reload
+- Updates send the `version` the task was loaded with; a `409` means someone else changed it and a `404` that they deleted it, and the UI offers a reload
 - A progress bar at the top of the page shows while any request runs; it appears only after 300 ms, so quick requests don't flash it
 
 ## Layout

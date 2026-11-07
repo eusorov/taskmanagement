@@ -4,18 +4,21 @@ import { PRIORITY_LABEL } from './priorityLabel'
 
 interface TaskRowProps {
   task: Task
+  /** Being marked done or deleted, until the list is reloaded; a click before that would send a stale version */
+  saving: boolean
   onToggleDone: (task: Task) => void
   onEdit: (task: Task) => void
   onDelete: (task: Task) => void
 }
 
-export function TaskRow({ task, onToggleDone, onEdit, onDelete }: TaskRowProps) {
+export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRowProps) {
   return (
-    <li className="flex gap-3 border-b border-rule py-3">
+    <li aria-busy={saving} className="flex gap-3 border-b border-rule py-3">
       <PriorityStroke priority={task.priority} faded={task.done} />
       <input
         type="checkbox"
         checked={task.done}
+        disabled={saving}
         onChange={() => onToggleDone(task)}
         aria-label={`Done: ${task.name}`}
         className="mt-1 size-5 shrink-0 accent-blue-pencil"
@@ -38,8 +41,9 @@ export function TaskRow({ task, onToggleDone, onEdit, onDelete }: TaskRowProps) 
         <button
           type="button"
           onClick={() => onDelete(task)}
+          disabled={saving}
           aria-label={`Delete ${task.name}`}
-          className="rounded px-2 py-1 text-muted hover:text-red-pencil hover:underline"
+          className="rounded px-2 py-1 text-muted hover:text-red-pencil hover:underline disabled:opacity-40 disabled:no-underline"
         >
           Delete
         </button>

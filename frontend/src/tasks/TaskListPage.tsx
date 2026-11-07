@@ -104,6 +104,10 @@ export function TaskListPage() {
             <TaskRow
               key={task.id}
               task={task}
+              saving={
+                (updateTask.isPending && updateTask.variables.task.id === task.id) ||
+                (deleteTask.isPending && deleteTask.variables.id === task.id)
+              }
               onToggleDone={(t) => {
                 dismissRowError()
                 updateTask.mutate(

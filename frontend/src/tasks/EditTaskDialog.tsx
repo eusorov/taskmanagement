@@ -16,7 +16,9 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
   const updateTask = useUpdateTask()
   const reloadTasks = useReloadTasks()
   const showToast = useToast()
-  const conflict = updateTask.error instanceof ApiError && updateTask.error.status === 409
+  const status = updateTask.error instanceof ApiError ? updateTask.error.status : undefined
+  // Changed (409) or deleted (404) by someone else: saving again can't succeed, only a reload helps
+  const conflict = status === 409 || status === 404
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
@@ -65,9 +67,13 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
           <PriorityPicker name="edit-task-priority" value={priority} onChange={setPriority} />
           {conflict ? (
             <div role="alert" className="rounded-md border border-red-pencil/40 bg-white p-3 text-sm">
-              <p>Someone else changed this task while you were editing. Reload to see the latest version.</p>
+              <p>
+                {status === 404
+                  ? 'Someone else deleted this task while you were editing.'
+                  : 'Someone else changed this task while you were editing. Reload to see the latest version.'}
+              </p>
               <button type="button" onClick={reload} className="mt-2 font-bold text-blue-pencil underline">
-                Reload task
+                {status === 404 ? 'Reload list' : 'Reload task'}
               </button>
             </div>
           ) : (
