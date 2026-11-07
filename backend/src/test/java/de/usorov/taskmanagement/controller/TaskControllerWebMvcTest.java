@@ -31,6 +31,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -94,6 +96,28 @@ class TaskControllerWebMvcTest {
 						false,
 						2,
 						10));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"URGENT,", ",URGENT", "URGENT,,", " ,URGENT"})
+	void listIgnoresEmptyPriorityEntries(String priority) throws Exception {
+		when(taskService.find(any())).thenReturn(new TaskPage(List.of(), 0, 50, 0));
+
+		mvc.perform(get("/api/tasks").param("priority", priority)).andExpect(status().isOk());
+
+		verify(taskService)
+				.find(new TaskSearch(null, EnumSet.of(Priority.URGENT), null, null, false, true, 0, 50));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"", ",", ",,"})
+	void listTreatsOnlyEmptyPriorityEntriesAsNoFilter(String priority) throws Exception {
+		when(taskService.find(any())).thenReturn(new TaskPage(List.of(), 0, 50, 0));
+
+		mvc.perform(get("/api/tasks").param("priority", priority)).andExpect(status().isOk());
+
+		verify(taskService)
+				.find(new TaskSearch(null, EnumSet.noneOf(Priority.class), null, null, false, true, 0, 50));
 	}
 
 	@Test

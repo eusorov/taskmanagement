@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Query parameters of {@code GET /api/tasks}. Without {@code sort} tasks are ordered by priority desc, then createdAt
@@ -41,12 +42,21 @@ public record TaskListQuery(
 		boolean ascending = order == null ? sortField == TaskSortField.NAME : order.equals("asc");
 		return new TaskSearch(
 				done,
-				priority == null || priority.isEmpty() ? EnumSet.noneOf(Priority.class) : EnumSet.copyOf(priority),
+				priorities(),
 				q == null || q.isBlank() ? null : q.strip(),
 				sortField,
 				ascending,
 				groupDone == null || groupDone,
 				page == null ? 0 : page,
 				size == null ? DEFAULT_SIZE : size);
+	}
+
+	// Empty entries, as in "priority=URGENT," or "priority=", arrive as null and are ignored
+	private EnumSet<Priority> priorities() {
+		EnumSet<Priority> priorities = EnumSet.noneOf(Priority.class);
+		if (priority != null) {
+			priority.stream().filter(Objects::nonNull).forEach(priorities::add);
+		}
+		return priorities;
 	}
 }
