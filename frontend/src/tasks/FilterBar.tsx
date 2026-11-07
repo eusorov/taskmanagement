@@ -42,14 +42,16 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
 
   return (
     <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule pb-3">
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(limitQuery(event.target.value))}
-        aria-label="Search tasks"
-        placeholder="Search"
-        className="w-full rounded-md border border-edge bg-white px-3 py-1.5 sm:w-56"
-      />
+      {/* A visible label, like "Sort by", instead of a placeholder that is gone while typing */}
+      <label className="flex w-full items-center gap-2 text-sm text-muted sm:w-auto">
+        Search tasks
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(limitQuery(event.target.value))}
+          className="min-w-0 flex-1 rounded-md border border-edge bg-white px-3 py-1.5 text-base text-ink sm:w-44 sm:flex-none"
+        />
+      </label>
       <div role="group" aria-label="Filter by status" className="flex gap-1">
         {STATUSES.map(({ value, label }) => (
           <button

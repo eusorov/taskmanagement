@@ -118,6 +118,35 @@ describe('adding a task', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('One more')
   })
+
+  it('labels the name field visibly and ties a rejection to it', async () => {
+    api.failNext('POST', 400, { detail: 'Invalid request', violations: [{ field: 'name', message: 'must not be blank' }] })
+    const { user } = renderApp()
+    await screen.findByText(/No tasks yet/)
+    const name = screen.getByRole('textbox', { name: 'Task name' })
+    expect(screen.getByText('Task name', { selector: 'label' })).toBeVisible()
+
+    await user.type(name, 'One more')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    await screen.findByRole('alert')
+    expect(name).toBeInvalid()
+    expect(name).toHaveAccessibleDescription('name: must not be blank')
+  })
+
+  it('does not blame the name field for a server error', async () => {
+    api.failNext('POST', 500)
+    const { user } = renderApp()
+    await screen.findByText(/No tasks yet/)
+    const name = screen.getByRole('textbox', { name: 'Task name' })
+
+    await user.type(name, 'One more')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    await screen.findByRole('alert')
+    expect(name).toBeValid()
+    expect(name).toHaveAccessibleDescription('The server ran into a problem. Try again in a moment.')
+  })
 })
 
 describe('changing a task', () => {
@@ -542,6 +571,26 @@ describe('filters', () => {
     expect(screen.getByText('2 tasks match')).toBeInTheDocument()
   })
 
+  it('announces how many tasks a search finds', async () => {
+    const { user } = renderApp()
+    await screen.findByText('Call mom')
+    // A live region that already exists, so screen readers announce the change in it
+    const count = screen.getByText('3 tasks')
+    expect(count).toHaveAttribute('aria-live', 'polite')
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search tasks' }), 'buy')
+
+    await waitFor(() => expect(count).toHaveTextContent('2 tasks match'))
+  })
+
+  it('labels the search box visibly', async () => {
+    renderApp()
+    await screen.findByText('Call mom')
+
+    expect(screen.getByText('Search tasks')).toBeVisible()
+    expect(screen.getByRole('searchbox', { name: 'Search tasks' })).not.toHaveAttribute('placeholder')
+  })
+
   it('filters by status and priority', async () => {
     const { user, router } = renderApp()
     await screen.findByText('Call mom')
@@ -641,6 +690,8 @@ describe('pagination', () => {
     const { user, router } = renderApp()
 
     expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument()
+    // Announced on each page change, as the focus stays on the button
+    expect(screen.getByText('Page 1 of 3')).toHaveAttribute('aria-live', 'polite')
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled()
     expect(taskNames()).toHaveLength(20)
 
@@ -690,5 +741,15 @@ describe('routing', () => {
 
     expect(screen.getByRole('heading', { name: 'This page doesn’t exist' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to your tasks' })).toHaveAttribute('href', '/')
+  })
+
+  it('names the not-found page in the tab title, and restores the title on leaving it', async () => {
+    document.title = 'Tasks'
+    const { user } = renderApp('/nope')
+    expect(document.title).toBe('Page not found · Tasks')
+
+    await user.click(screen.getByRole('link', { name: 'Go to your tasks' }))
+    await screen.findByRole('heading', { name: 'Tasks' })
+    expect(document.title).toBe('Tasks')
   })
 })

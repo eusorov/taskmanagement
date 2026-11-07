@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { errorMessage, type Priority } from '../api/client'
+import { useId, useState, type FormEvent } from 'react'
+import { ApiError, errorMessage, type Priority } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useCreateTask } from './queries'
@@ -11,6 +11,10 @@ export function CreateTaskForm() {
   const [done, setDone] = useState(false)
   const createTask = useCreateTask()
   const showToast = useToast()
+  const nameId = useId()
+  const errorId = useId()
+  // Only a rejected name makes the field invalid; a server or network error isn't the input's fault
+  const invalid = createTask.error instanceof ApiError && createTask.error.status === 400
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -29,11 +33,17 @@ export function CreateTaskForm() {
 
   return (
     <form onSubmit={submit} className="mt-8">
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* Visible, unlike the placeholder, which is gone as soon as typing starts */}
+      <label htmlFor={nameId} className="text-sm text-muted">
+        Task name
+      </label>
+      <div className="mt-1 flex flex-col gap-2 sm:flex-row">
         <input
+          id={nameId}
           value={name}
           onChange={(event) => setName(limitName(event.target.value))}
-          aria-label="Task name"
+          aria-invalid={invalid || undefined}
+          aria-describedby={createTask.isError ? errorId : undefined}
           placeholder="What needs doing?"
           className="min-w-0 flex-1 rounded-md border border-edge bg-white px-3 py-2 text-lg placeholder:text-muted"
         />
@@ -59,7 +69,7 @@ export function CreateTaskForm() {
         </label>
       </div>
       {createTask.isError && (
-        <p role="alert" className="mt-2 text-sm text-red-pencil">
+        <p id={errorId} role="alert" className="mt-2 text-sm text-red-pencil">
           {errorMessage(createTask.error)}
         </p>
       )}

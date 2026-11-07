@@ -50,12 +50,15 @@ export function TaskListPage() {
       <div inert={editing !== null}>
         <header className="flex items-baseline justify-between gap-4">
           <h1 className="text-4xl font-bold tracking-tight">Tasks</h1>
-          {tasks.data && (
-            <p className="text-muted">
-              {total} {total === 1 ? 'task' : 'tasks'}
-              {filtered && ' match'}
-            </p>
-          )}
+          {/* Always rendered, so screen readers announce the new count after a search or filter */}
+          <p aria-live="polite" className="text-muted">
+            {tasks.data && (
+              <>
+                {total} {total === 1 ? 'task' : 'tasks'}
+                {filtered && ' match'}
+              </>
+            )}
+          </p>
         </header>
 
         <CreateTaskForm />
@@ -107,7 +110,8 @@ export function TaskListPage() {
             >
               Previous
             </button>
-            <span className="text-muted">
+            {/* Announced, since the focus stays on Previous or Next */}
+            <span aria-live="polite" className="text-muted">
               Page {filters.page + 1} of {pages}
             </span>
             <button
