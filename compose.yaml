@@ -40,7 +40,7 @@ services:
         condition: service_healthy
     # No published ports: the API is reached through the frontend, Actuator (9000) stays internal
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:9000/actuator/health/liveness"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/actuator/health/readiness"]
       interval: 10s
       timeout: 3s
       retries: 3
