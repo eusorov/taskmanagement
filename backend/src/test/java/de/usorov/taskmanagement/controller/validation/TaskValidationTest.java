@@ -44,7 +44,12 @@ class TaskValidationTest {
 	class TaskNameRules {
 
 		@ParameterizedTest
-		@ValueSource(strings = {"Buy milk", "a", "  padded  ", "two\nlines", "tab\tinside", "😀"})
+		@ValueSource(
+				strings = {
+					"Buy milk", "a", "  padded  ", "two\nlines", "tab\tinside", "😀",
+					// Invisible characters are fine next to visible ones
+					"\u00a0Buy\u00a0milk\u00a0", "a\u200bb", "👨\u200d👩\u200d👧"
+				})
 		void acceptsNames(String name) {
 			assertThat(messages(new Named(name))).isEmpty();
 		}
@@ -60,7 +65,18 @@ class TaskValidationTest {
 		}
 
 		@ParameterizedTest
-		@ValueSource(strings = {"", " ", "   ", "\n", " \t\n "})
+		@ValueSource(
+				strings = {
+					"", " ", "   ", "\n", " \t\n ",
+					"\u00a0", // no-break space
+					"\u2007\u202f", // figure space, narrow no-break space
+					"\u3000", // ideographic space
+					"\u2028\u2029", // line and paragraph separators
+					"\u200b", // zero-width space
+					"\ufeff", // byte order mark
+					"\u0001\u001f", // control characters
+					" \u00a0\t\u200b "
+				})
 		void rejectsBlankNames(String name) {
 			assertThat(messages(new Named(name))).containsExactly("must not be blank");
 		}
@@ -77,8 +93,10 @@ class TaskValidationTest {
 
 		@Test
 		void reportsEveryBrokenRule() {
+			// NUL is invisible too, so a name of only NULs is also blank
 			assertThat(messages(new Named("\u0000".repeat(501))))
-					.containsExactly("must be at most 500 characters", "must not contain NUL characters");
+					.containsExactly(
+							"must be at most 500 characters", "must not be blank", "must not contain NUL characters");
 		}
 	}
 

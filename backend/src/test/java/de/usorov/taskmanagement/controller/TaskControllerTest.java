@@ -83,6 +83,19 @@ class TaskControllerTest {
 	}
 
 	@Test
+	void createStripsUnicodeSpacesAndRejectsInvisibleNames() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"\\u00a0\\u200bBuy milk\\u3000\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.name").value("Buy milk"));
+
+		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\\u00a0\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
+	}
+
+	@Test
 	void createRejectsBlankName() throws Exception {
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"   \"}"))
 				.andExpect(status().isBadRequest())

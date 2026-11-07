@@ -366,7 +366,7 @@
             "type": "string",
             "maxLength": 500,
             "minLength": 0,
-            "pattern": "(?s).*\\S.*"
+            "pattern": "(?s).*[^\\p{IsWhite_Space}\\p{Cf}\\p{Cc}].*"
           },
           "priority": {
             "type": "string",
@@ -488,7 +488,7 @@
             "type": "string",
             "maxLength": 500,
             "minLength": 0,
-            "pattern": "(?s).*\\S.*"
+            "pattern": "(?s).*[^\\p{IsWhite_Space}\\p{Cf}\\p{Cc}].*"
           },
           "priority": {
             "type": "string",

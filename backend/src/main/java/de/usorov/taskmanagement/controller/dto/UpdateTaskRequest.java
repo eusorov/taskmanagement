@@ -2,6 +2,7 @@ package de.usorov.taskmanagement.controller.dto;
 
 import de.usorov.taskmanagement.controller.validation.TaskName;
 import de.usorov.taskmanagement.model.Priority;
+import de.usorov.taskmanagement.model.TaskNames;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -12,4 +13,9 @@ public record UpdateTaskRequest(
 		@TaskName String name,
 		Priority priority,
 		Boolean done,
-		@NotNull Integer version) {}
+		@NotNull Integer version) {
+
+	public UpdateTaskRequest {
+		name = name == null ? null : TaskNames.strip(name);
+	}
+}

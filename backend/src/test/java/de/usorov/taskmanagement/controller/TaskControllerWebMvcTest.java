@@ -207,6 +207,31 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
+	void createPassesTrimmedNameToService() throws Exception {
+		when(taskService.create("Buy milk", null)).thenReturn(TASK);
+
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"\\u00a0 Buy milk \\u200b\"}"))
+				.andExpect(status().isCreated());
+
+		verify(taskService).create("Buy milk", null);
+	}
+
+	@Test
+	void createChecksLengthAfterTrimming() throws Exception {
+		String name = "x".repeat(500);
+		when(taskService.create(name, null)).thenReturn(TASK);
+
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"   " + name + "   \"}"))
+				.andExpect(status().isCreated());
+
+		verify(taskService).create(name, null);
+	}
+
+	@Test
 	void createRejectsInvalidBodyWithoutCallingService() throws Exception {
 		mvc.perform(post("/api/tasks")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -247,6 +272,18 @@ class TaskControllerWebMvcTest {
 				.andExpect(jsonPath("$.id").value(ID.toString()));
 
 		verify(taskService).update(ID, 3, new TaskChanges(null, null, true));
+	}
+
+	@Test
+	void patchPassesTrimmedNameToService() throws Exception {
+		when(taskService.update(eq(ID), eq(0), any())).thenReturn(TASK);
+
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"  New name\\u3000\",\"version\":0}"))
+				.andExpect(status().isOk());
+
+		verify(taskService).update(ID, 0, new TaskChanges("New name", null, null));
 	}
 
 	@Test

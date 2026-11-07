@@ -45,7 +45,7 @@ public class TaskService {
 		}
 		Instant now = now();
 		Task task = new Task(
-				UUID.randomUUID(), name.strip(), priority == null ? Priority.NORMAL : priority, false, now, now, 0);
+				UUID.randomUUID(), name, priority == null ? Priority.NORMAL : priority, false, now, now, 0);
 		taskRepository.insert(task);
 		log.info("Created task {} with priority {}", task.id(), task.priority());
 		return task;
@@ -53,9 +53,7 @@ public class TaskService {
 
 	@Transactional
 	public Task update(UUID id, int expectedVersion, TaskChanges changes) {
-		TaskChanges stripped = new TaskChanges(
-				changes.name() == null ? null : changes.name().strip(), changes.priority(), changes.done());
-		Task updated = taskRepository.update(id, expectedVersion, stripped, now()).orElseThrow(() -> {
+		Task updated = taskRepository.update(id, expectedVersion, changes, now()).orElseThrow(() -> {
 			if (taskRepository.existsById(id)) {
 				log.info("Rejected update of task {}: version {} is stale", id, expectedVersion);
 				return new VersionConflictException(id, expectedVersion);
