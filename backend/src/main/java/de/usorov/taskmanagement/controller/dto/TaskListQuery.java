@@ -1,5 +1,6 @@
 package de.usorov.taskmanagement.controller.dto;
 
+import de.usorov.taskmanagement.controller.validation.NoNulCharacters;
 import de.usorov.taskmanagement.model.Priority;
 import de.usorov.taskmanagement.model.TaskSearch;
 import de.usorov.taskmanagement.model.TaskSortField;
@@ -19,7 +20,7 @@ import java.util.List;
 public record TaskListQuery(
 		Boolean done,
 		List<Priority> priority,
-		@Size(max = 500) String q,
+		@Size(max = 500) @NoNulCharacters String q,
 		@Schema(allowableValues = {"priority", "createdAt", "updatedAt", "name"})
 				@Pattern(regexp = "priority|createdAt|updatedAt|name")
 				String sort,

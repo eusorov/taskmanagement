@@ -118,6 +118,16 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
+	void listRejectsNulCharacterInSearchWithoutCallingService() throws Exception {
+		mvc.perform(get("/api/tasks").param("q", "a\u0000b"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].field").value("q"))
+				.andExpect(jsonPath("$.violations[0].message").value("must not contain NUL characters"));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
 	void getReturnsTaskAsJson() throws Exception {
 		when(taskService.get(ID)).thenReturn(TASK);
 
@@ -184,6 +194,16 @@ class TaskControllerWebMvcTest {
 	}
 
 	@Test
+	void createRejectsNulCharacterWithoutCallingService() throws Exception {
+		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"a\\u0000b\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].field").value("name"))
+				.andExpect(jsonPath("$.violations[0].message").value("must not contain NUL characters"));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
 	void createMapsTaskLimitTo409() throws Exception {
 		when(taskService.create(any(), any())).thenThrow(new TaskLimitReachedException(10_000));
 
@@ -226,6 +246,48 @@ class TaskControllerWebMvcTest {
 				.andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
 
 		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void patchRejectsNulCharacterWithoutCallingService() throws Exception {
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"a\\u0000b\",\"version\":0}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].field").value("name"))
+				.andExpect(jsonPath("$.violations[0].message").value("must not contain NUL characters"));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void patchAcceptsNameWithLineBreak() throws Exception {
+		when(taskService.update(eq(ID), eq(0), any())).thenReturn(TASK);
+
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"two\\nlines\",\"version\":0}"))
+				.andExpect(status().isOk());
+
+		verify(taskService).update(ID, 0, new TaskChanges("two\nlines", null, null));
+	}
+
+	@Test
+	void createRejectsMissingNameAsBlank() throws Exception {
+		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].field").value("name"))
+				.andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
+
+		verifyNoInteractions(taskService);
+	}
+
+	@Test
+	void nameMayContainTabsAndNewlines() throws Exception {
+		when(taskService.create("a\tb\nc", null)).thenReturn(TASK);
+
+		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"a\\tb\\nc\"}"))
+				.andExpect(status().isCreated());
 	}
 
 	@Test
