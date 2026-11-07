@@ -188,11 +188,34 @@ class TaskControllerIT {
 		assertThat(task.get("version").asInt()).isEqualTo(1);
 	}
 
+	// The headers nginx sends (frontend/nginx.conf): the browser's Host with its port, and the scheme it used
+	@Test
+	void locationUsesTheAddressTheBrowserCalled() {
+		ResponseEntity<JsonNode> overHttp = postVia("http", "tasks.example:8081");
+		assertThat(overHttp.getHeaders().getLocation())
+				.hasToString("http://tasks.example:8081/api/tasks/" + overHttp.getBody().get("id").asText());
+
+		ResponseEntity<JsonNode> overHttps = postVia("https", "tasks.example");
+		assertThat(overHttps.getHeaders().getLocation())
+				.hasToString("https://tasks.example/api/tasks/" + overHttps.getBody().get("id").asText());
+	}
+
 	private ResponseEntity<JsonNode> post(String json) {
 		return client.post()
 				.uri("/api/tasks")
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(json)
+				.retrieve()
+				.toEntity(JsonNode.class);
+	}
+
+	private ResponseEntity<JsonNode> postVia(String proto, String host) {
+		return client.post()
+				.uri("/api/tasks")
+				.header("X-Forwarded-Proto", proto)
+				.header("X-Forwarded-Host", host)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body("{\"name\":\"Ship it\"}")
 				.retrieve()
 				.toEntity(JsonNode.class);
 	}
