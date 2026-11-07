@@ -11,7 +11,8 @@ interface TaskRowProps {
    * dialog opened then would start from it
    */
   saving: boolean
-  onEdit: (task: Task) => void
+  /** Gets the Edit button too, to give the focus back to when the dialog closes */
+  onEdit: (task: Task, button: HTMLElement) => void
 }
 
 const isStatus = (error: Error | null, status: number) => error instanceof ApiError && error.status === status
@@ -72,7 +73,7 @@ export function TaskRow({ task, saving, onEdit }: TaskRowProps) {
       <div className="flex shrink-0 items-start gap-1 text-sm">
         <button
           type="button"
-          onClick={() => onEdit(task)}
+          onClick={(event) => onEdit(task, event.currentTarget)}
           disabled={saving}
           aria-label={`Edit ${task.name}`}
           className="rounded px-2 py-1 text-blue-pencil hover:underline disabled:opacity-40 disabled:no-underline"

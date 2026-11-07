@@ -164,6 +164,40 @@ describe('changing a task', () => {
     expect(api.lastRequest('PATCH')).toBeUndefined()
   })
 
+  it('makes the page behind the edit dialog inert while it is open', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Pay rent' }))
+    expect(taskList().closest('[inert]')).not.toBeNull()
+    expect(screen.getByRole('searchbox', { name: 'Search tasks' }).closest('[inert]')).not.toBeNull()
+    expect(screen.getByRole('dialog').closest('[inert]')).toBeNull()
+
+    await user.keyboard('{Escape}')
+    expect(taskList().closest('[inert]')).toBeNull()
+  })
+
+  it('gives the focus back to the Edit button when the dialog closes', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+    const edit = await screen.findByRole('button', { name: 'Edit Pay rent' })
+
+    await user.click(edit)
+    await user.keyboard('{Escape}')
+    expect(edit).toHaveFocus()
+
+    await user.click(edit)
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(edit).toHaveFocus()
+
+    await user.click(edit)
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Task name' }), ' today')
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Edit Pay rent today' })).toHaveFocus()
+  })
+
   it('keeps the edit dialog open while it saves, so a failed save is still shown', async () => {
     const task = api.add('Pay rent')
     const { user } = renderApp()
