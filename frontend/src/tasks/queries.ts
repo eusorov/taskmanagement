@@ -1,4 +1,11 @@
-import { keepPreviousData, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+} from '@tanstack/react-query'
 import { api, unwrap, type Priority, type Task } from '../api/client'
 import { toListQuery, type TaskFilters } from './filters'
 
@@ -15,9 +22,20 @@ export function useTasks(filters: TaskFilters) {
   })
 }
 
-function useTaskMutation<V, R>(mutationFn: (variables: V) => Promise<R>, mutationKey?: readonly string[]) {
+/**
+ * Callbacks that run for every mutation, even when the component is gone by the time it settles, e.g. a row that a
+ * filter drops after its change. Those passed to `mutate` don't run then.
+ */
+export type TaskMutationCallbacks<V, R> = Pick<UseMutationOptions<R, Error, V>, 'onSuccess' | 'onError'>
+
+function useTaskMutation<V, R>(
+  mutationFn: (variables: V) => Promise<R>,
+  mutationKey?: readonly string[],
+  callbacks?: TaskMutationCallbacks<V, R>,
+) {
   const queryClient = useQueryClient()
   return useMutation({
+    ...callbacks,
     mutationKey,
     mutationFn,
     onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS }),
@@ -35,23 +53,29 @@ export interface TaskUpdate {
   changes: { name?: string; priority?: Priority; done?: boolean }
 }
 
-export function useUpdateTask() {
-  return useTaskMutation(async ({ task, changes }: TaskUpdate) =>
-    unwrap(
-      await api.PATCH('/api/tasks/{id}', {
-        params: { path: { id: task.id } },
-        // The version the user last saw; a stale one is rejected with 409
-        body: { ...changes, version: task.version },
-      }),
-    ),
+export function useUpdateTask(callbacks?: TaskMutationCallbacks<TaskUpdate, Task>) {
+  return useTaskMutation(
+    async ({ task, changes }: TaskUpdate) =>
+      unwrap(
+        await api.PATCH('/api/tasks/{id}', {
+          params: { path: { id: task.id } },
+          // The version the user last saw; a stale one is rejected with 409
+          body: { ...changes, version: task.version },
+        }),
+      ),
     UPDATE_TASK,
+    callbacks,
   )
 }
 
-export function useDeleteTask() {
-  return useTaskMutation(async (task: Task) => {
-    unwrap(await api.DELETE('/api/tasks/{id}', { params: { path: { id: task.id } } }))
-  }, DELETE_TASK)
+export function useDeleteTask(callbacks?: TaskMutationCallbacks<Task, void>) {
+  return useTaskMutation(
+    async (task: Task) => {
+      unwrap(await api.DELETE('/api/tasks/{id}', { params: { path: { id: task.id } } }))
+    },
+    DELETE_TASK,
+    callbacks,
+  )
 }
 
 /**

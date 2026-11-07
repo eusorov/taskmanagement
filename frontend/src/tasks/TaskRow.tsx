@@ -1,6 +1,8 @@
-import type { Task } from '../api/client'
+import { ApiError, errorMessage, type Task } from '../api/client'
+import { useToast } from '../feedback/toastContext'
 import { PriorityStroke } from './priority'
 import { PRIORITY_LABEL } from './priorityLabel'
+import { useDeleteTask, useUpdateTask } from './queries'
 
 interface TaskRowProps {
   task: Task
@@ -9,12 +11,33 @@ interface TaskRowProps {
    * dialog opened then would start from it
    */
   saving: boolean
-  onToggleDone: (task: Task) => void
   onEdit: (task: Task) => void
-  onDelete: (task: Task) => void
 }
 
-export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRowProps) {
+const isStatus = (error: Error | null, status: number) => error instanceof ApiError && error.status === status
+
+export function TaskRow({ task, saving, onEdit }: TaskRowProps) {
+  const showToast = useToast()
+  // Deleted elsewhere: the reload after the failed save drops this row, so a message in it would vanish too
+  const toastIfDeleted = (error: Error, deleted: Task) => {
+    if (isStatus(error, 404)) showToast(`“${deleted.name}” was deleted elsewhere`)
+  }
+  // Each row has its own mutations, so a change to another task can't replace this one's error or confirmation
+  const updateTask = useUpdateTask({
+    onSuccess: (_, { task: t }) => showToast(t.done ? `Reopened “${t.name}”` : `Marked “${t.name}” as done`),
+    onError: (error, { task: t }) => toastIfDeleted(error, t),
+  })
+  const deleteTask = useDeleteTask({
+    onSuccess: (_, t) => showToast(`Deleted “${t.name}”`),
+    onError: toastIfDeleted,
+  })
+  const error = updateTask.error ?? deleteTask.error
+
+  function dismissError() {
+    updateTask.reset()
+    deleteTask.reset()
+  }
+
   return (
     <li aria-busy={saving} className="flex gap-3 border-b border-rule py-3">
       <PriorityStroke priority={task.priority} faded={task.done} />
@@ -22,7 +45,10 @@ export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRo
         type="checkbox"
         checked={task.done}
         disabled={saving}
-        onChange={() => onToggleDone(task)}
+        onChange={() => {
+          dismissError()
+          updateTask.mutate({ task, changes: { done: !task.done } })
+        }}
         aria-label={`Done: ${task.name}`}
         className="mt-1 size-5 shrink-0 accent-blue-pencil"
       />
@@ -31,6 +57,17 @@ export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRo
         <p className={`text-sm ${task.priority === 'URGENT' && !task.done ? 'text-red-pencil' : 'text-muted'}`}>
           {PRIORITY_LABEL[task.priority]}
         </p>
+        {error && !isStatus(error, 404) && (
+          <div role="alert" className="mt-1 flex items-start gap-2 text-sm text-red-pencil">
+            <p>
+              {/* The list has reloaded after the failed save, so the row already shows the other change */}
+              {isStatus(error, 409) ? 'Changed elsewhere, now showing the latest. Try again.' : errorMessage(error)}
+            </p>
+            <button type="button" onClick={dismissError} aria-label="Dismiss" className="shrink-0 px-1 text-muted">
+              ✕
+            </button>
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 items-start gap-1 text-sm">
         <button
@@ -44,7 +81,10 @@ export function TaskRow({ task, saving, onToggleDone, onEdit, onDelete }: TaskRo
         </button>
         <button
           type="button"
-          onClick={() => onDelete(task)}
+          onClick={() => {
+            dismissError()
+            deleteTask.mutate(task)
+          }}
           disabled={saving}
           aria-label={`Delete ${task.name}`}
           className="rounded px-2 py-1 text-muted hover:text-red-pencil hover:underline disabled:opacity-40 disabled:no-underline"

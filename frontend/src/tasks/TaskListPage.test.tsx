@@ -14,6 +14,8 @@ const taskNames = () =>
   within(taskList())
     .getAllByRole('listitem')
     .map((item) => within(item).getAllByRole('paragraph')[0].textContent)
+/** The list item of the task with this name. */
+const row = (name: string) => screen.getByRole('checkbox', { name: `Done: ${name}` }).closest('li')!
 
 describe('task list', () => {
   it('shows tasks from the API with their priority', async () => {
@@ -309,18 +311,92 @@ describe('changing a task', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('offers a reload when a done toggle hits a stale version', async () => {
+  it('shows a stale done toggle on its task, which then has the latest version', async () => {
     const task = api.add('Pay rent')
+    api.add('Water plants')
     const { user } = renderApp()
 
     await screen.findByText('Pay rent')
     api.changeElsewhere(task, { name: 'Pay rent today' })
     await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
 
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('changed or deleted elsewhere')
-    await user.click(within(alert).getByRole('button', { name: 'Reload' }))
-    expect(await screen.findByText('Pay rent today')).toBeInTheDocument()
+    // The list has reloaded, so the row shows the other change and the next click sends its version
+    await screen.findByText('Pay rent today')
+    const alert = await within(row('Pay rent today')).findByRole('alert')
+    expect(alert).toHaveTextContent('Changed elsewhere, now showing the latest. Try again.')
+    expect(within(row('Water plants')).queryByRole('alert')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent today' }))
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Pay rent today' })).toBeChecked())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('tells in a toast when a task was deleted elsewhere', async () => {
+    const task = api.add('Pay rent')
+    const { user } = renderApp()
+
+    await screen.findByText('Pay rent')
+    api.tasks = api.tasks.filter((t) => t.id !== task.id)
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    expect(await screen.findByText('“Pay rent” was deleted elsewhere')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Pay rent')).not.toBeInTheDocument())
+  })
+
+  it('shows a failed change on its task until dismissed', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+
+    await screen.findByText('Pay rent')
+    api.failNext('PATCH', 500)
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    const alert = await within(row('Pay rent')).findByRole('alert')
+    expect(alert).toHaveTextContent('The server ran into a problem. Try again in a moment.')
+    await user.click(within(alert).getByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('shows a conflict on its task even after another task was clicked', async () => {
+    const payRent = api.add('Pay rent')
+    api.add('Water plants')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+
+    const releaseFirst = api.holdNext('PATCH')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Water plants' }))
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Water plants' })).toBeChecked())
+    // Changed elsewhere while Pay rent's change waits, so it's rejected after Water plants was saved
+    api.changeElsewhere(payRent, { name: 'Pay rent today' })
+    releaseFirst()
+
+    await screen.findByText('Pay rent today')
+    expect(await within(row('Pay rent today')).findByRole('alert')).toHaveTextContent('Changed elsewhere')
+  })
+
+  it('confirms every change, not only the last one clicked', async () => {
+    api.add('Pay rent')
+    api.add('Water plants')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+
+    const releaseFirst = api.holdNext('PATCH')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Water plants' }))
+    expect(await screen.findByText('Marked “Water plants” as done')).toBeInTheDocument()
+    releaseFirst()
+
+    expect(await screen.findByText('Marked “Pay rent” as done')).toBeInTheDocument()
+  })
+
+  it('confirms a change that takes the task out of the filtered list', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp('/?status=open')
+
+    await user.click(await screen.findByRole('checkbox', { name: 'Done: Pay rent' }))
+
+    await waitFor(() => expect(screen.queryByText('Pay rent')).not.toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent('Marked “Pay rent” as done')
   })
 
   it('confirms reopening a done task', async () => {

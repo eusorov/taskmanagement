@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { ApiError, errorMessage, type Task } from '../api/client'
-import { useToast } from '../feedback/toastContext'
+import { errorMessage, type Task } from '../api/client'
 import { CreateTaskForm } from './CreateTaskForm'
 import { EditTaskDialog } from './EditTaskDialog'
 import { FilterBar } from './FilterBar'
 import { DEFAULT_FILTERS, isFiltered, PAGE_SIZE, parseFilters, serializeFilters, type TaskFilters } from './filters'
-import { useDeleteTask, useReloadTasks, useSavingTaskIds, useTasks, useUpdateTask } from './queries'
+import { useSavingTaskIds, useTasks } from './queries'
 import { TaskRow } from './TaskRow'
 
 export function TaskListPage() {
@@ -19,20 +18,8 @@ export function TaskListPage() {
   const filtered = isFiltered(filters)
 
   const tasks = useTasks(filters)
-  const updateTask = useUpdateTask()
-  const deleteTask = useDeleteTask()
-  const reloadTasks = useReloadTasks()
   const savingTaskIds = useSavingTaskIds()
-  const showToast = useToast()
   const [editing, setEditing] = useState<Task | null>(null)
-
-  const rowError = updateTask.error ?? deleteTask.error
-  const rowConflict = rowError instanceof ApiError && (rowError.status === 409 || rowError.status === 404)
-
-  function dismissRowError() {
-    updateTask.reset()
-    deleteTask.reset()
-  }
 
   const total = tasks.data?.total ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -58,26 +45,6 @@ export function TaskListPage() {
 
       <CreateTaskForm />
       <FilterBar filters={filters} onChange={setFilters} />
-
-      {rowError && (
-        <div role="alert" className="mt-4 flex items-start justify-between gap-4 rounded-md bg-white p-3 text-sm">
-          <p>
-            {rowConflict
-              ? 'This task was changed or deleted elsewhere. Reload to see the latest list.'
-              : errorMessage(rowError)}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              dismissRowError()
-              if (rowConflict) reloadTasks()
-            }}
-            className="shrink-0 font-bold text-blue-pencil underline"
-          >
-            {rowConflict ? 'Reload' : 'Dismiss'}
-          </button>
-        </div>
-      )}
 
       {/* Past the last page, keep "Loading" up until the jump instead of a wrong "No tasks yet" */}
       {tasks.isPending || pastLastPage ? (
@@ -110,23 +77,7 @@ export function TaskListPage() {
       ) : (
         <ul aria-label="Tasks">
           {tasks.data.items.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              saving={savingTaskIds.has(task.id)}
-              onToggleDone={(t) => {
-                dismissRowError()
-                updateTask.mutate(
-                  { task: t, changes: { done: !t.done } },
-                  { onSuccess: () => showToast(t.done ? `Reopened “${t.name}”` : `Marked “${t.name}” as done`) },
-                )
-              }}
-              onEdit={setEditing}
-              onDelete={(t) => {
-                dismissRowError()
-                deleteTask.mutate(t, { onSuccess: () => showToast(`Deleted “${t.name}”`) })
-              }}
-            />
+            <TaskRow key={task.id} task={task} saving={savingTaskIds.has(task.id)} onEdit={setEditing} />
           ))}
         </ul>
       )}
