@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Build: tests are skipped here because they need Docker (Testcontainers); CI runs them
+# Build: tests are skipped here because they need Docker (Testcontainers); run ./mvnw verify before building
 FROM eclipse-temurin:17.0.21_9-jdk-noble AS build
 WORKDIR /build
 COPY mvnw pom.xml ./

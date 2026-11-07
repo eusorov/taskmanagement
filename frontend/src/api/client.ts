@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 
 export const api = createClient<paths>({
-  // Same origin in dev (Vite proxy) and production (Caddy)
+  // Same origin in dev (Vite proxy) and production (nginx)
   baseUrl: window.location.origin,
   // Look fetch up on each call, so tests can replace it
   fetch: (request) => globalThis.fetch(request),

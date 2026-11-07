@@ -18,37 +18,39 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 | Run locally                           | `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` (starts Postgres from `compose.dev.yaml`, data kept across restarts, demo tasks in an empty database) |
 | Delete the local dev database         | `docker compose -f compose.dev.yaml down -v` |
 | Generate jOOQ sources                 | `./mvnw -Pjooq-codegen generate-sources`|
-| run docker in dev mode                | SPRING_PROFILES_ACTIVE=dev docker compose up -d|
+| Run the whole stack with demo tasks   | `SPRING_PROFILES_ACTIVE=dev docker compose up -d --build` (from the repository root) |
 
 ## Design decisions
-- no auth was required, to keep simple no auth was implemented
-- without auth there is no user connections to tasks, everyone can read tasks
-- JOOQ was chosen over JPA because, avoids N+1 and there is more control over SQL
-- add connection pool
-- use REST API (GET, POST, PATCH, DELETE) no graphql for simplicity
-- For REST errors use ProblemDetails
-- use simple paging if there are many tasks
-- add OpenAPI doc and document controller to create later client for the frontend 
-- add spring actuator endpoints for health checks
-- use dockerfile and docker compose for simple deployment (no kubernetes)
-- use Lombok for simplicity 
-- add webMvcTests and integration tests for controller
-- add 20 demo tasks on startup if db is empty, only in the `dev` profile
 
-## out of scope
-- auth
-- caching
-- kubernetes deployment
-- traces
-- api versioning
-- native image
-- db performance
-- db cursor if db gets too big
-- retry /failur handling for db outage
-- rate limiting
-- https
-- Security request headers
+- No authentication, as none was required. Without users, tasks belong to no one: everyone reads and changes the same list.
+- jOOQ instead of JPA: every query is written out, so there are no hidden N+1 queries and the SQL stays under control.
+- Plain REST (`GET`, `POST`, `PATCH`, `DELETE` on `/api/tasks`); GraphQL would add little for one resource.
+- Concurrent edits are caught with a `version` per task: a `PATCH` with a stale version is rejected with 409.
+- Errors are RFC 7807 problem details (`ProblemDetail`); validation errors list each invalid field.
+- Lists are paged with page and size; each order the UI offers and the name search have an index.
+- The API is documented with OpenAPI, from which the frontend's typed client is generated.
+- Hikari's connection pool is capped at 10 connections per instance (`application.yaml`).
+- Actuator health, info and metrics run on a separate port (9000) that is never published.
+- Deployment is a Dockerfile plus Docker Compose; no Kubernetes.
+- Lombok for constructors and loggers.
+- Tests: `@WebMvcTest` for the controller, integration tests against a real Postgres (Testcontainers) for the rest.
+- The `dev` profile adds 20 demo tasks on startup when the database is empty.
+
+## Out of scope
+
+- Authentication and authorization
+- Caching
+- Kubernetes deployment
+- Tracing
+- API versioning
+- Native image
+- Query tuning beyond the indexes above
+- Cursor-based paging for very large tables
+- Retries and graceful handling of a database outage
+- Rate limiting
+- HTTPS
+- Security response headers
 - Secrets management
-- github actions
-- static analysis + coverage (sonar)
-- load tests
+- CI (e.g. GitHub Actions): run `./mvnw verify` locally before building images
+- Static analysis and coverage (e.g. Sonar)
+- Load tests

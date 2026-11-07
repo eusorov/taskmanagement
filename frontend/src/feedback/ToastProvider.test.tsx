@@ -1,22 +1,14 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, renderHook, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TOAST_DURATION_MS, ToastProvider } from './ToastProvider'
 import { useToast, type ShowToast } from './toastContext'
 
-let showToast: ShowToast
-
-function Capture() {
-  showToast = useToast()
-  return null
-}
+// The function useToast returned on the latest render
+let toast: { current: ShowToast }
 
 beforeEach(() => {
   vi.useFakeTimers()
-  render(
-    <ToastProvider>
-      <Capture />
-    </ToastProvider>,
-  )
+  toast = renderHook(useToast, { wrapper: ToastProvider }).result
 })
 
 afterEach(() => {
@@ -25,7 +17,7 @@ afterEach(() => {
 
 describe('ToastProvider', () => {
   it('announces a message in a live region and removes it after a few seconds', () => {
-    act(() => showToast('Task added'))
+    act(() => toast.current('Task added'))
 
     expect(screen.getByRole('status')).toHaveTextContent('Task added')
 
@@ -37,9 +29,9 @@ describe('ToastProvider', () => {
   })
 
   it('replaces the current message with a newer one', () => {
-    act(() => showToast('Task added'))
+    act(() => toast.current('Task added'))
     act(() => vi.advanceTimersByTime(TOAST_DURATION_MS / 2))
-    act(() => showToast('Changes saved'))
+    act(() => toast.current('Changes saved'))
 
     expect(screen.getByRole('status')).toHaveTextContent('Changes saved')
     expect(screen.getByRole('status')).not.toHaveTextContent('Task added')
@@ -51,6 +43,6 @@ describe('ToastProvider', () => {
 
   it('cannot be used outside the provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    expect(() => render(<Capture />)).toThrow('useToast must be used inside <ToastProvider>')
+    expect(() => renderHook(useToast)).toThrow('useToast must be used inside <ToastProvider>')
   })
 })

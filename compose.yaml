@@ -44,10 +44,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-      # Long enough that a slow migration is never killed
+      # Failed checks during a slow migration don't count, so the frontend keeps waiting instead of failing to start
       start_period: 120s
-    labels:
-      autoheal: "true"
     restart: unless-stopped
     logging: *logging
 
@@ -65,8 +63,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-    labels:
-      autoheal: "true"
     restart: unless-stopped
     logging: *logging
 
