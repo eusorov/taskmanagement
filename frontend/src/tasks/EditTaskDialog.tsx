@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { ApiError, errorMessage, type Priority, type Task } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
@@ -25,7 +25,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
   const conflict = status === 409 || status === 404
 
   useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => event.key === 'Escape' && onClose()
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [onClose])
@@ -70,6 +70,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
         aria-modal="true"
         aria-labelledby="edit-task-title"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={keepFocusInside}
         className="w-full max-w-lg rounded-lg bg-paper p-6 shadow-xl"
       >
         <h2 id="edit-task-title" className="text-xl font-bold">
@@ -123,4 +124,23 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
       </div>
     </div>
   )
+}
+
+const FOCUSABLE = 'input, select, textarea, button, a[href], [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Tab from the dialog's last control goes to its first, Shift+Tab from the first to its last, so keyboard focus never
+ * reaches the page behind it. Tabbing between the controls in between is left to the browser.
+ */
+function keepFocusInside(event: KeyboardEvent<HTMLElement>) {
+  if (event.key !== 'Tab') return
+  const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (element) => !element.matches(':disabled'),
+  )
+  const [first, last] = [focusable[0], focusable.at(-1)]
+  const [edge, wrapTo] = event.shiftKey ? [first, last] : [last, first]
+  if (wrapTo && document.activeElement === edge) {
+    event.preventDefault()
+    wrapTo.focus()
+  }
 }

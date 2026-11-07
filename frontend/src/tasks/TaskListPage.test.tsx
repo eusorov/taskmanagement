@@ -162,6 +162,28 @@ describe('changing a task', () => {
     expect(api.lastRequest('PATCH')).toBeUndefined()
   })
 
+  it('keeps keyboard focus inside the edit dialog', async () => {
+    api.add('Pay rent')
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Pay rent' }))
+    const dialog = screen.getByRole('dialog', { name: 'Edit task' })
+    const name = within(dialog).getByRole('textbox', { name: 'Task name' })
+    const save = within(dialog).getByRole('button', { name: 'Save changes' })
+    expect(name).toHaveFocus()
+
+    // Back from the first field to the last button, and on from there to the first field again
+    await user.tab({ shift: true })
+    expect(save).toHaveFocus()
+    await user.tab()
+    expect(name).toHaveFocus()
+
+    // A disabled Save button is skipped: Cancel is the last one then
+    await user.clear(name)
+    await user.tab({ shift: true })
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
+  })
+
   it('offers a reload when the task was changed elsewhere while editing', async () => {
     const task = api.add('Pay rent')
     const { user } = renderApp()
