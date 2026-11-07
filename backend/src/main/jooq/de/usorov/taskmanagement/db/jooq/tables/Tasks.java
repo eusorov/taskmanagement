@@ -129,7 +129,7 @@ public class Tasks extends TableImpl<TasksRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.TASKS_DONE_PRIORITY_CREATED_AT_IDX);
+        return Arrays.asList(Indexes.TASKS_CREATED_AT_ASC_IDX, Indexes.TASKS_CREATED_AT_DESC_IDX, Indexes.TASKS_LIST_ORDER_IDX, Indexes.TASKS_NAME_ASC_IDX, Indexes.TASKS_NAME_DESC_IDX, Indexes.TASKS_UPDATED_AT_DESC_IDX);
     }
 
     @Override

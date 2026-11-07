@@ -22,5 +22,10 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
-    public static final Index TASKS_DONE_PRIORITY_CREATED_AT_IDX = Internal.createIndex(DSL.name("tasks_done_priority_created_at_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.PRIORITY, Tasks.TASKS.CREATED_AT }, false);
+    public static final Index TASKS_CREATED_AT_ASC_IDX = Internal.createIndex(DSL.name("tasks_created_at_asc_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.CREATED_AT, Tasks.TASKS.ID }, false);
+    public static final Index TASKS_CREATED_AT_DESC_IDX = Internal.createIndex(DSL.name("tasks_created_at_desc_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.CREATED_AT.desc(), Tasks.TASKS.ID }, false);
+    public static final Index TASKS_LIST_ORDER_IDX = Internal.createIndex(DSL.name("tasks_list_order_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.PRIORITY.desc(), Tasks.TASKS.CREATED_AT.desc(), Tasks.TASKS.ID }, false);
+    public static final Index TASKS_NAME_ASC_IDX = Internal.createIndex(DSL.name("tasks_name_asc_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.NAME, Tasks.TASKS.ID }, false);
+    public static final Index TASKS_NAME_DESC_IDX = Internal.createIndex(DSL.name("tasks_name_desc_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.NAME.desc(), Tasks.TASKS.ID }, false);
+    public static final Index TASKS_UPDATED_AT_DESC_IDX = Internal.createIndex(DSL.name("tasks_updated_at_desc_idx"), Tasks.TASKS, new OrderField[] { Tasks.TASKS.DONE, Tasks.TASKS.UPDATED_AT.desc(), Tasks.TASKS.ID }, false);
 }
