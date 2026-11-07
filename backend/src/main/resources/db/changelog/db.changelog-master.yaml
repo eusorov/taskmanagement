@@ -6,3 +6,6 @@ databaseChangeLog:
   - include:
       file: changes/0002-index-list-orders.sql
       relativeToChangelogFile: true
+  - include:
+      file: changes/0003-index-name-search.sql
+      relativeToChangelogFile: true
