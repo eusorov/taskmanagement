@@ -286,6 +286,18 @@ class TaskControllerWebMvcTest {
 		verify(taskService).update(ID, 0, new TaskChanges("New name", null, null));
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = {"0.7", "1.0", "1e0"})
+	void patchRejectsDecimalVersionWithoutCallingService(String version) throws Exception {
+		mvc.perform(patch("/api/tasks/{id}", ID)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"done\":true,\"version\":" + version + "}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+
+		verifyNoInteractions(taskService);
+	}
+
 	@Test
 	void patchMapsVersionConflictTo409() throws Exception {
 		when(taskService.update(eq(ID), eq(2), any())).thenThrow(new VersionConflictException(ID, 2));

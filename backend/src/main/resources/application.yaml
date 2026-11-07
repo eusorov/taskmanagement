@@ -6,6 +6,10 @@ spring:
     hikari:
       pool-name: taskmanagement
       maximum-pool-size: 10
+  jackson:
+    deserialization:
+      # Reject {"version": 0.7} instead of silently truncating it to 0
+      accept-float-as-int: false
   jooq:
     sql-dialect: postgres
   liquibase:
