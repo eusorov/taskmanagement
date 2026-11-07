@@ -86,6 +86,13 @@ class TaskValidationTest {
 			assertThat(messages(new Named("x".repeat(501)))).containsExactly("must be at most 500 characters");
 		}
 
+		// Counted like Postgres char_length: an emoji is one character, though Java stores it as two chars
+		@Test
+		void countsCharactersOutsideTheBasicPlaneOnce() {
+			assertThat(messages(new Named("😀".repeat(500)))).isEmpty();
+			assertThat(messages(new Named("😀".repeat(501)))).containsExactly("must be at most 500 characters");
+		}
+
 		@Test
 		void rejectsNulCharacters() {
 			assertThat(messages(new Named("a\u0000b"))).containsExactly("must not contain NUL characters");

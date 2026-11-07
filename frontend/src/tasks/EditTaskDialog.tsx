@@ -3,6 +3,7 @@ import { ApiError, errorMessage, type Priority, type Task } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useReloadTasks, useUpdateTask } from './queries'
+import { limitName } from './taskName'
 
 interface EditTaskDialogProps {
   task: Task
@@ -57,9 +58,8 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
           <input
             autoFocus
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => setName(limitName(event.target.value))}
             aria-label="Task name"
-            maxLength={500}
             className="rounded-md border border-rule bg-white px-3 py-2 text-lg"
           />
           <PriorityPicker name="edit-task-priority" value={priority} onChange={setPriority} />

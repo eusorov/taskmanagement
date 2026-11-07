@@ -59,6 +59,7 @@
             "required": false,
             "schema": {
               "type": "string",
+              "default": "priority",
               "enum": [
                 "priority",
                 "createdAt",
@@ -365,7 +366,6 @@
           "name": {
             "type": "string",
             "maxLength": 500,
-            "minLength": 0,
             "pattern": "(?s).*[^\\p{IsWhite_Space}\\p{Cf}\\p{Cc}].*"
           },
           "priority": {
@@ -492,7 +492,6 @@
           "name": {
             "type": "string",
             "maxLength": 500,
-            "minLength": 0,
             "pattern": "(?s).*[^\\p{IsWhite_Space}\\p{Cf}\\p{Cc}].*"
           },
           "priority": {

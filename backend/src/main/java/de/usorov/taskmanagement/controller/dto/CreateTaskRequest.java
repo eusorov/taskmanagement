@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 
 /** A new task. Defaults are applied here, so the service always gets complete values. */
 public record CreateTaskRequest(
-		@NotNull(message = "must not be blank") @TaskName String name,
+		@NotNull(message = "must not be blank") @TaskName @Schema(maxLength = 500) String name,
 		@Schema(defaultValue = "NORMAL") Priority priority,
 		@Schema(defaultValue = "false") Boolean done) {
 

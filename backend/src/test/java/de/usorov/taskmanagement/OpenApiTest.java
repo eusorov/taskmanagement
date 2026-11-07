@@ -37,6 +37,14 @@ class OpenApiTest {
 						.value(contains("asc", "desc")));
 	}
 
+	// JSON Schema maxLength counts code points, as the validation and the database do
+	@Test
+	void specLimitsTaskNamesTo500Characters() throws Exception {
+		mvc.perform(get("/v3/api-docs"))
+				.andExpect(jsonPath("$.components.schemas.CreateTaskRequest.properties.name.maxLength").value(500))
+				.andExpect(jsonPath("$.components.schemas.UpdateTaskRequest.properties.name.maxLength").value(500));
+	}
+
 	@Test
 	void specDocumentsStatusCodesAndProblemResponses() throws Exception {
 		String problem = "$.components.schemas.Problem";

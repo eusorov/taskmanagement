@@ -116,6 +116,22 @@ class TaskControllerTest {
 				.andExpect(jsonPath("$.violations[0].field").value("name"));
 	}
 
+	// The validation limit and the database's char_length check count the same way: 500 emoji are stored, 501 rejected
+	@Test
+	void createAcceptsUpTo500EmojiAsTheDatabaseDoes() throws Exception {
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"" + "😀".repeat(500) + "\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.name").value("😀".repeat(500)));
+
+		mvc.perform(post("/api/tasks")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\":\"" + "😀".repeat(501) + "\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations[0].message").value("must be at most 500 characters"));
+	}
+
 	@Test
 	void createRejectsUnknownPriority() throws Exception {
 		mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON)

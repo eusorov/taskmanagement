@@ -3,6 +3,7 @@ package de.usorov.taskmanagement.controller.dto;
 import de.usorov.taskmanagement.controller.validation.TaskName;
 import de.usorov.taskmanagement.model.Priority;
 import de.usorov.taskmanagement.model.TaskNames;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -10,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
  * unchanged. {@code version} is the version the client last saw.
  */
 public record UpdateTaskRequest(
-		@TaskName String name,
+		@TaskName @Schema(maxLength = 500) String name,
 		Priority priority,
 		Boolean done,
 		@NotNull Integer version) {

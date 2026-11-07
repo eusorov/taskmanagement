@@ -3,6 +3,7 @@ import { errorMessage, type Priority } from '../api/client'
 import { useToast } from '../feedback/toastContext'
 import { PriorityPicker } from './priority'
 import { useCreateTask } from './queries'
+import { limitName } from './taskName'
 
 export function CreateTaskForm() {
   const [name, setName] = useState('')
@@ -31,10 +32,9 @@ export function CreateTaskForm() {
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => setName(limitName(event.target.value))}
           aria-label="Task name"
           placeholder="What needs doing?"
-          maxLength={500}
           className="min-w-0 flex-1 rounded-md border border-rule bg-white px-3 py-2 text-lg placeholder:text-muted"
         />
         <button
