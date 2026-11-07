@@ -164,6 +164,28 @@ describe('changing a task', () => {
     expect(api.lastRequest('PATCH')).toBeUndefined()
   })
 
+  it('keeps the edit dialog open while it saves, so a failed save is still shown', async () => {
+    const task = api.add('Pay rent')
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Pay rent' }))
+    const dialog = screen.getByRole('dialog', { name: 'Edit task' })
+    api.changeElsewhere(task, { name: 'Pay the rent' })
+    const release = api.holdNext('PATCH')
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    // Escape, Cancel and the backdrop all leave it open
+    await user.keyboard('{Escape}')
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    await user.click(dialog.parentElement!)
+    expect(screen.getByRole('dialog', { name: 'Edit task' })).toBeInTheDocument()
+
+    release()
+    expect(await within(dialog).findByText(/Someone else changed this task/)).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('keeps keyboard focus inside the edit dialog', async () => {
     api.add('Pay rent')
     const { user } = renderApp()

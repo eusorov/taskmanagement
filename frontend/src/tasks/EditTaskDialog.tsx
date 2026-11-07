@@ -23,12 +23,15 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
   const status = error instanceof ApiError ? error.status : undefined
   // Changed (409) or deleted (404) by someone else: saving again can't succeed, only a reload helps
   const conflict = status === 409 || status === 404
+  // Stays open while saving: the save can't be taken back, and closing would hide whether it worked
+  const saving = updateTask.isPending
 
   useEffect(() => {
+    if (saving) return
     const closeOnEscape = (event: globalThis.KeyboardEvent) => event.key === 'Escape' && onClose()
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
-  }, [onClose])
+  }, [onClose, saving])
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -64,7 +67,9 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
   }
 
   return (
-    <div className="fixed inset-0 z-10 flex items-start justify-center bg-ink/30 px-4 pt-24" onClick={onClose}>
+    <div className="fixed inset-0 z-10 flex items-start justify-center bg-ink/30 px-4 pt-24"
+      onClick={saving ? undefined : onClose}
+    >
       <div
         role="dialog"
         aria-modal="true"
@@ -109,12 +114,17 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             )
           )}
           <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-muted">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-md px-4 py-2 text-muted disabled:opacity-40"
+            >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!stripName(name) || updateTask.isPending || conflict}
+              disabled={!stripName(name) || saving || conflict}
               className="rounded-md bg-blue-pencil px-4 py-2 font-bold text-white disabled:opacity-40"
             >
               Save changes
