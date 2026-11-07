@@ -47,7 +47,11 @@ public class TaskService {
 		return task;
 	}
 
-	/** A patch that changes nothing returns the task as it is, without a new version. */
+	/**
+	 * A patch that changes nothing returns the task as it is, without a new version. If another update commits just
+	 * after it, such a patch may get a 409 although its version was current. Accepted: the version is stale by the
+	 * time the client sees the answer, and a no-op patch with a stale version is a 409 anyway.
+	 */
 	@Transactional
 	public Task update(UUID id, int expectedVersion, TaskChanges changes) {
 		Optional<Task> updated = taskRepository.update(id, expectedVersion, changes, now());
