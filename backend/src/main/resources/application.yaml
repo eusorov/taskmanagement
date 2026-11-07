@@ -26,8 +26,6 @@ server:
   # use framework because: absolute URLs (Location) use the scheme and host:port that nginx forwards.
   # Not native: Tomcat drops the port of X-Forwarded-Host.
   forward-headers-strategy: framework
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 logging:
   level:
