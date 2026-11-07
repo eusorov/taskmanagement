@@ -217,6 +217,27 @@ describe('changing a task', () => {
     expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeEnabled()
   })
 
+  it('keeps a task locked while it saves, even after another task is clicked', async () => {
+    api.add('Water plants')
+    api.add('Pay rent')
+    const { user } = renderApp()
+    await screen.findByText('Pay rent')
+
+    const releaseFirst = api.holdNext('PATCH')
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Pay rent' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Done: Water plants' }))
+
+    // Pay rent's change is still in flight; another click would send its stale version
+    expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Delete Pay rent' })).toBeDisabled()
+
+    releaseFirst()
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeEnabled())
+    expect(screen.getByRole('checkbox', { name: 'Done: Pay rent' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Done: Water plants' })).toBeChecked()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('offers a reload when a done toggle hits a stale version', async () => {
     const task = api.add('Pay rent')
     const { user } = renderApp()

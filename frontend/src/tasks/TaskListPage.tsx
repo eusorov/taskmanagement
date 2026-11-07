@@ -6,7 +6,7 @@ import { CreateTaskForm } from './CreateTaskForm'
 import { EditTaskDialog } from './EditTaskDialog'
 import { FilterBar } from './FilterBar'
 import { DEFAULT_FILTERS, isFiltered, PAGE_SIZE, parseFilters, serializeFilters, type TaskFilters } from './filters'
-import { useDeleteTask, useReloadTasks, useTasks, useUpdateTask } from './queries'
+import { useDeleteTask, useReloadTasks, useSavingTaskIds, useTasks, useUpdateTask } from './queries'
 import { TaskRow } from './TaskRow'
 
 export function TaskListPage() {
@@ -22,6 +22,7 @@ export function TaskListPage() {
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
   const reloadTasks = useReloadTasks()
+  const savingTaskIds = useSavingTaskIds()
   const showToast = useToast()
   const [editing, setEditing] = useState<Task | null>(null)
 
@@ -112,10 +113,7 @@ export function TaskListPage() {
             <TaskRow
               key={task.id}
               task={task}
-              saving={
-                (updateTask.isPending && updateTask.variables.task.id === task.id) ||
-                (deleteTask.isPending && deleteTask.variables.id === task.id)
-              }
+              saving={savingTaskIds.has(task.id)}
               onToggleDone={(t) => {
                 dismissRowError()
                 updateTask.mutate(

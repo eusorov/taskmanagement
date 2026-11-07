@@ -1,8 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, unwrap, type Priority, type Task } from '../api/client'
 import { toListQuery, type TaskFilters } from './filters'
 
 const TASKS = ['tasks'] as const
+const UPDATE_TASK = [...TASKS, 'update'] as const
+const DELETE_TASK = [...TASKS, 'delete'] as const
 
 export function useTasks(filters: TaskFilters) {
   return useQuery({
@@ -13,9 +15,10 @@ export function useTasks(filters: TaskFilters) {
   })
 }
 
-function useTaskMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
+function useTaskMutation<V, R>(mutationFn: (variables: V) => Promise<R>, mutationKey?: readonly string[]) {
   const queryClient = useQueryClient()
   return useMutation({
+    mutationKey,
     mutationFn,
     onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS }),
   })
@@ -41,13 +44,30 @@ export function useUpdateTask() {
         body: { ...changes, version: task.version },
       }),
     ),
+    UPDATE_TASK,
   )
 }
 
 export function useDeleteTask() {
   return useTaskMutation(async (task: Task) => {
     unwrap(await api.DELETE('/api/tasks/{id}', { params: { path: { id: task.id } } }))
+  }, DELETE_TASK)
+}
+
+/**
+ * Ids of tasks whose change or delete is still saving, until the list has reloaded, from every component. A click on
+ * such a task before that would send a stale version.
+ */
+export function useSavingTaskIds(): Set<string> {
+  const updating = useMutationState({
+    filters: { mutationKey: UPDATE_TASK, status: 'pending' },
+    select: (mutation) => (mutation.state.variables as TaskUpdate).task.id,
   })
+  const deleting = useMutationState({
+    filters: { mutationKey: DELETE_TASK, status: 'pending' },
+    select: (mutation) => (mutation.state.variables as Task).id,
+  })
+  return new Set([...updating, ...deleting])
 }
 
 export function useReloadTasks() {
