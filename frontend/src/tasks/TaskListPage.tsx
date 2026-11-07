@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ApiError, errorMessage, type Task } from '../api/client'
 import { useToast } from '../feedback/toastContext'
@@ -35,6 +35,13 @@ export function TaskListPage() {
 
   const total = tasks.data?.total ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  // Past the end, e.g. after deleting the last task on the last page or from an old URL. Placeholder data still has
+  // the previous query's total, so only a fresh result decides
+  const pastLastPage = tasks.isSuccess && !tasks.isPlaceholderData && filters.page >= pages
+
+  useEffect(() => {
+    if (pastLastPage) setFilters({ ...filters, page: pages - 1 })
+  }, [pastLastPage, filters, pages, setFilters])
 
   return (
     <main className="mx-auto max-w-2xl px-4 pt-12 pb-24">
@@ -71,7 +78,8 @@ export function TaskListPage() {
         </div>
       )}
 
-      {tasks.isPending ? (
+      {/* Past the last page, keep "Loading" up until the jump instead of a wrong "No tasks yet" */}
+      {tasks.isPending || pastLastPage ? (
         <p className="mt-6 text-muted">Loading tasks…</p>
       ) : tasks.isError ? (
         <div role="alert" className="mt-6">

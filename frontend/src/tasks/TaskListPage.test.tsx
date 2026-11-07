@@ -437,6 +437,27 @@ describe('pagination', () => {
     await screen.findByText('Only task')
     expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument()
   })
+
+  it('moves to the new last page when the last task on the last page is deleted', async () => {
+    for (let i = 1; i <= 21; i++) api.add(`Task ${i}`)
+    const { user, router } = renderApp('/?page=1')
+
+    await user.click(await screen.findByRole('button', { name: 'Delete Task 1' }))
+
+    await waitFor(() => expect(taskNames()).toHaveLength(20))
+    expect(taskNames()[0]).toBe('Task 21')
+    expect(router.state.location.search).toBe('')
+    expect(screen.queryByText('No tasks yet. Add the first one above.')).not.toBeInTheDocument()
+  })
+
+  it('goes to the last page when the URL points past it', async () => {
+    for (let i = 1; i <= 25; i++) api.add(`Task ${i}`)
+    const { router } = renderApp('/?page=9')
+
+    expect(await screen.findByText('Page 2 of 2')).toBeInTheDocument()
+    await waitFor(() => expect(taskNames()).toHaveLength(5))
+    expect(router.state.location.search).toBe('?page=1')
+  })
 })
 
 describe('routing', () => {
