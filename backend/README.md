@@ -13,11 +13,11 @@ Spring Boot 3.5, Java 17, PostgreSQL, jOOQ for data access and Liquibase for sch
 ## Common tasks
 
 | Task                                  | Command |
-|---------------------------------------|---|
-| Run tests                             | `./mvnw test`
-| Run locally with a throwaway Postgres | `./mvnw spring-boot:test-run` (prod settings; add `-Dspring-boot.run.profiles=dev` for demo tasks)
-| Generate jOOQ sources                 | `./mvnw -Pjooq-codegen generate-sources`
-| run docker in dev mode                | SPRING_PROFILES_ACTIVE=dev docker compose up -d
+|---------------------------------------|---------------|
+| Run tests                             | `./mvnw test` |
+| Run locally with a throwaway Postgres | `./mvnw spring-boot:test-run` (prod settings; add `-Dspring-boot.run.profiles=dev` for demo tasks)|
+| Generate jOOQ sources                 | `./mvnw -Pjooq-codegen generate-sources`|
+| run docker in dev mode                | SPRING_PROFILES_ACTIVE=dev docker compose up -d|
 
 ## Design decisions
 - no auth was required, to keep simple no auth was implemented
