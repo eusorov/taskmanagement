@@ -87,7 +87,7 @@ export function EditTaskDialog({ task: initialTask, onClose }: EditTaskDialogPro
             value={name}
             onChange={(event) => setName(limitName(event.target.value))}
             aria-label="Task name"
-            className="rounded-md border border-rule bg-white px-3 py-2 text-lg"
+            className="rounded-md border border-edge bg-white px-3 py-2 text-lg"
           />
           <PriorityPicker name="edit-task-priority" value={priority} onChange={setPriority} />
           {conflict ? (

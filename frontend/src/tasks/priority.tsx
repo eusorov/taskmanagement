@@ -20,7 +20,7 @@ interface PriorityPickerProps {
 
 export function PriorityPicker({ name, value, onChange }: PriorityPickerProps) {
   return (
-    <fieldset className="flex rounded-md border border-rule bg-white p-0.5">
+    <fieldset className="flex rounded-md border border-edge bg-white p-0.5">
       <legend className="sr-only">Priority</legend>
       {PRIORITIES.map((priority) => (
         <label

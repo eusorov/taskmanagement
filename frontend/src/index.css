@@ -8,6 +8,8 @@
   --color-ink: #1e2a30;
   --color-muted: #5d6a6f;
   --color-rule: #d3dad5;
+  /* Edge of form controls: at least 3:1 against paper and white, so fields can be told apart (WCAG 1.4.11) */
+  --color-edge: #7b8881;
   --color-blue-pencil: #2b4fb0;
   --color-red-pencil: #b42318;
   --color-graphite: #8c9a92;

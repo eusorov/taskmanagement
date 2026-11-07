@@ -35,7 +35,7 @@ export function CreateTaskForm() {
           onChange={(event) => setName(limitName(event.target.value))}
           aria-label="Task name"
           placeholder="What needs doing?"
-          className="min-w-0 flex-1 rounded-md border border-rule bg-white px-3 py-2 text-lg placeholder:text-muted"
+          className="min-w-0 flex-1 rounded-md border border-edge bg-white px-3 py-2 text-lg placeholder:text-muted"
         />
         <button
           type="submit"

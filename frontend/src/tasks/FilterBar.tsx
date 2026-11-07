@@ -48,7 +48,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
         onChange={(event) => setQuery(limitQuery(event.target.value))}
         aria-label="Search tasks"
         placeholder="Search"
-        className="w-full rounded-md border border-rule bg-white px-3 py-1.5 sm:w-56"
+        className="w-full rounded-md border border-edge bg-white px-3 py-1.5 sm:w-56"
       />
       <div role="group" aria-label="Filter by status" className="flex gap-1">
         {STATUSES.map(({ value, label }) => (
@@ -82,7 +82,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
         <select
           value={filters.sort}
           onChange={(event) => onChange({ ...filters, sort: event.target.value as SortOption, page: 0 })}
-          className="rounded-md border border-rule bg-white px-2 py-1 text-ink"
+          className="rounded-md border border-edge bg-white px-2 py-1 text-ink"
         >
           {Object.entries(SORT_OPTIONS).map(([value, { label }]) => (
             <option key={value} value={value}>
