@@ -56,9 +56,22 @@ describe('adding a task', () => {
 
     expect(await screen.findByText('Book dentist')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Task added')
-    expect(api.lastRequest('POST')?.body).toEqual({ name: 'Book dentist', priority: 'URGENT' })
+    expect(api.lastRequest('POST')?.body).toEqual({ name: 'Book dentist', priority: 'URGENT', done: false })
     expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('')
     expect(screen.getByRole('radio', { name: 'Normal' })).toBeChecked()
+  })
+
+  it('adds a task that is already done and resets the checkbox', async () => {
+    const { user } = renderApp()
+    await screen.findByText(/No tasks yet/)
+
+    await user.type(screen.getByRole('textbox', { name: 'Task name' }), 'Paid the rent')
+    await user.click(screen.getByRole('checkbox', { name: 'Already done' }))
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    expect(await screen.findByRole('checkbox', { name: 'Done: Paid the rent' })).toBeChecked()
+    expect(api.lastRequest('POST')?.body).toEqual({ name: 'Paid the rent', priority: 'NORMAL', done: true })
+    expect(screen.getByRole('checkbox', { name: 'Already done' })).not.toBeChecked()
   })
 
   it('cannot add a blank task', async () => {

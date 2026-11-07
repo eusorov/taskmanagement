@@ -22,7 +22,7 @@ function useTaskMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
 }
 
 export function useCreateTask() {
-  return useTaskMutation(async (task: { name: string; priority: Priority }) =>
+  return useTaskMutation(async (task: { name: string; priority: Priority; done: boolean }) =>
     unwrap(await api.POST('/api/tasks', { body: task })),
   )
 }

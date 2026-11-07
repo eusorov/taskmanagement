@@ -7,17 +7,19 @@ import { useCreateTask } from './queries'
 export function CreateTaskForm() {
   const [name, setName] = useState('')
   const [priority, setPriority] = useState<Priority>('NORMAL')
+  const [done, setDone] = useState(false)
   const createTask = useCreateTask()
   const showToast = useToast()
 
   function submit(event: FormEvent) {
     event.preventDefault()
     createTask.mutate(
-      { name: name.trim(), priority },
+      { name: name.trim(), priority, done },
       {
         onSuccess: () => {
           setName('')
           setPriority('NORMAL')
+          setDone(false)
           showToast('Task added')
         },
       },
@@ -43,8 +45,18 @@ export function CreateTaskForm() {
           Add task
         </button>
       </div>
-      <div className="mt-2">
+      <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
         <PriorityPicker name="new-task-priority" value={priority} onChange={setPriority} />
+        {/* For logging something that's already finished */}
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={done}
+            onChange={(event) => setDone(event.target.checked)}
+            className="size-4 accent-blue-pencil"
+          />
+          Already done
+        </label>
       </div>
       {createTask.isError && (
         <p role="alert" className="mt-2 text-sm text-red-pencil">
